@@ -1,0 +1,57 @@
+from __future__ import annotations
+
+from backend.interface.desktop.api import WebviewApi
+
+
+def test_desktop_api_keeps_frontend_contract() -> None:
+    required = {
+        "get_state",
+        "save_config",
+        "choose_file",
+        "choose_folder",
+        "choose_source",
+        "choose_login_state",
+        "open_path",
+        "open_log",
+        "open_backup",
+        "reset_login",
+        "reset_app_data",
+        "process_novel_analyze",
+        "process_novel_run",
+        "novel_split_preview",
+        "novel_split_run",
+        "clean_text_run",
+        "auto_publish_run",
+        "auto_publish_stop",
+        "auto_publish_pause",
+        "auto_publish_resume",
+        "chapter_sync_run",
+        "chapter_sync_stop",
+        "chapter_sync_pause",
+        "chapter_sync_resume",
+        "web_crawler_preview",
+        "web_crawler_run",
+        "web_crawler_stop",
+        "character_material_platform_defaults",
+        "character_material_run",
+        "character_material_stop",
+        "current_plot_platform_defaults",
+        "current_plot_run",
+        "current_plot_stop",
+        "webnovel_writer_platform_defaults",
+        "webnovel_writer_list_projects",
+        "webnovel_writer_save_project",
+        "webnovel_writer_load_project",
+        "webnovel_writer_dashboard",
+        "webnovel_writer_plan_run",
+        "webnovel_writer_write_run",
+        "webnovel_writer_review_run",
+        "webnovel_writer_export_run",
+        "webnovel_writer_validate_run",
+        "webnovel_writer_context_run",
+        "webnovel_writer_sync_control_run",
+        "webnovel_writer_templates_run",
+        "webnovel_writer_stop",
+    }
+    missing = sorted(name for name in required if not callable(getattr(WebviewApi, name, None)))
+    assert missing == []
