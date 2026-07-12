@@ -135,6 +135,21 @@ def maximize_window(window: object) -> None:
         pass
     apply_native_window_icon()
 
+def get_webview_storage_path() -> Path:
+    if sys.platform == "win32":
+        base = Path(
+            os.environ.get("LOCALAPPDATA")
+            or (Path.home() / "AppData" / "Local")
+        )
+    else:
+        base = Path(
+            os.environ.get("XDG_DATA_HOME")
+            or (Path.home() / ".local" / "share")
+        )
+
+    storage = base / "FanqiePublishSync" / "pywebview"
+    storage.mkdir(parents=True, exist_ok=True)
+    return storage
 
 def main() -> None:
     hide_child_console_windows()
@@ -157,10 +172,12 @@ def main() -> None:
         **get_window_options(),
     )
     api.bind_window(window)
-    webview.start(maximize_window, window)
-
-
+    webview.start(
+        maximize_window,
+        window,
+        private_mode=False,
+        storage_path=str(get_webview_storage_path()),
+    )
+    
 if __name__ == "__main__":
     main()
-
-

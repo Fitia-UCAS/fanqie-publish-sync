@@ -674,7 +674,6 @@ button:disabled { opacity: .52; cursor: not-allowed; transform: none !important;
   user-select: text;
 }
 
-/* 当前剧情页：更紧凑的表单布局，去掉长说明文字后的专用样式 */
 .current-plot-form { gap: 15px; }
 .cp-section-title {
   margin-top: 2px;
@@ -730,7 +729,6 @@ button:disabled { opacity: .52; cursor: not-allowed; transform: none !important;
   color: rgb(var(--accent-700));
 }
 
-/* 网文写作 */
 .webnovel-writer-layout .webnovel-writer-card textarea.textarea {
   min-height: 72px;
   resize: vertical;
@@ -775,7 +773,6 @@ button:disabled { opacity: .52; cursor: not-allowed; transform: none !important;
 }
 
 
-/* 网文写作：极简操作面板 */
 .webnovel-writer-card { border-radius: 18px; overflow: hidden; }
 .webnovel-writer-layout .settings-body { padding-top: 18px; }
 .ww-panel-title { display: none !important; }
@@ -829,14 +826,12 @@ button:disabled { opacity: .52; cursor: not-allowed; transform: none !important;
   color: #334155;
 }
 
-/* 网文写作：右侧沿用统一控制台样式，只保留动态状态栏，详细日志写入文件 */
 .webnovel-writer-layout { align-items: start; }
 .webnovel-writer-layout .webnovel-writer-card { max-height: var(--settings-panel-height); }
 .status-badge { max-width: min(360px, 38vw); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .status-badge i { flex: 0 0 auto; }
 
 
-/* 网文写作：左侧重新跟随“当前剧情”等页面的紧凑操作面板 */
 .webnovel-writer-layout .settings-body { padding: 22px 24px 24px; }
 .webnovel-writer-card { border-radius: var(--panel-radius); overflow: hidden; }
 .ww-form { gap: 14px; }
@@ -851,7 +846,6 @@ button:disabled { opacity: .52; cursor: not-allowed; transform: none !important;
 .webnovel-writer-layout { align-items: stretch; }
 .webnovel-writer-layout .webnovel-writer-card { max-height: var(--settings-panel-height); }
 
-/* 网文写作：按“当前剧情”同款左侧文件选择 + 操作网格，不使用分隔横线、项目下拉或额外说明 */
 .webnovel-writer-layout .settings-body { padding: 22px 24px 24px; }
 .webnovel-writer-card { border-radius: var(--panel-radius); overflow: hidden; }
 .ww-form { gap: 14px; }
@@ -865,7 +859,6 @@ button:disabled { opacity: .52; cursor: not-allowed; transform: none !important;
 .ww-check { margin: 0; }
 
 
-/* 全局按钮统一中性色 */
 .primary-btn, .soft-btn, .ghost-btn, .mini-btn,
 .big-action, .big-action.primary-action, .ww-action-btn, .ww-action-btn.ww-primary, .ww-action-btn.ww-danger {
   background: linear-gradient(180deg, #fff, #f8fafc);
@@ -881,4 +874,59 @@ button:disabled { opacity: .52; cursor: not-allowed; transform: none !important;
 .big-action:hover, .big-action.primary-action:hover, .ww-action-btn:hover, .ww-action-btn.ww-primary:hover, .ww-action-btn.ww-danger:hover {
   border-color: #cbd5e1;
   color: #334155;
+}
+
+.source-file-picker {
+  position: relative;
+}
+.source-file-picker.source-picker-open {
+  overflow: visible;
+  z-index: 30;
+}
+.source-picker-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.source-picker-caret {
+  font-size: 10px;
+  transition: transform .16s ease;
+}
+.source-picker-open .source-picker-caret {
+  transform: rotate(180deg);
+}
+.source-picker-menu {
+  position: absolute;
+  top: calc(100% + 7px);
+  right: 0;
+  z-index: 100;
+  min-width: 180px;
+  width: max-content;
+  max-width: calc(100vw - 48px);
+  padding: 6px;
+  border: 1px solid #e2e8f0;
+  border-radius: 13px;
+  background: #fff;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, .16);
+}
+.source-picker-menu[hidden] {
+  display: none;
+}
+.source-picker-menu button {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #334155;
+  text-align: left;
+  cursor: pointer;
+}
+.source-picker-menu button:hover,
+.source-picker-menu button:focus-visible {
+  outline: none;
+  background: #f1f5f9;
 }

@@ -108,7 +108,10 @@ def open_native_dialog(window: Any, *, save: bool, folder: bool, save_filename: 
 
 
 def _dialog_file_types(save_filename: str = "") -> tuple[str, ...]:
-    suffix = Path(save_filename or "").suffix.lower()
+    if not str(save_filename or "").strip():
+        return ("All files (*.*)",)
+
+    suffix = Path(save_filename).suffix.lower()
     if suffix == ".json":
         return ("All files (*.*)", "JSON files (*.json)")
     if suffix == ".md":
@@ -157,16 +160,10 @@ def _normalize_dialog_result(result: Any, *, keep_multiple: bool = False) -> str
 
 
 def open_source_dialog(window: Any, *, current_path: str = "") -> str:
-    selected = _open_subprocess_path_picker(mode="source", current_path=current_path)
-    if selected is not None:
-        return selected
-    return open_native_dialog(window, save=False, folder=False, save_filename="novel.md")
+    return open_native_dialog(window, save=False, folder=False, save_filename="")
 
 
 def open_login_state_dialog(window: Any, *, current_path: str = "") -> str:
-    selected = _open_subprocess_path_picker(mode="login_state", current_path=current_path)
-    if selected is not None:
-        return selected
     return open_native_dialog(window, save=False, folder=False, save_filename="state.json")
 
 

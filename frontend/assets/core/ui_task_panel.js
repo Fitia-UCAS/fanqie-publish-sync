@@ -102,7 +102,6 @@
       }
     },
     setTaskSummary(page, summary, level = 'info') {
-      // 右侧面板不再显示“最近结果”；任务详情写入日志文件，动态栏显示当前状态。
     },
     conciseTaskMessage(message, page = '') {
       const text = String(message || '').trim();
@@ -308,14 +307,110 @@
         ${this.filePicker(`${prefix}AuthStatePath`, cfg.authStatePath || '', `${prefix}ChooseAuthState`, '默认 state.json')}
       </div>`;
     },
+    bindFanqiePickerMenu(button, picker, options, onSelect) {
+      if (!button || !picker || picker.dataset.fanqiePickerBound === '1') return;
+      picker.dataset.fanqiePickerBound = '1';
+      picker.classList.add('source-file-picker');
+      button.classList.add('source-picker-toggle');
+      button.setAttribute('aria-haspopup', 'menu');
+      button.setAttribute('aria-expanded', 'false');
+      button.innerHTML = '<span>选择</span><span class="source-picker-caret" aria-hidden="true">▾</span>';
+
+      const menu = document.createElement('div');
+      menu.className = 'source-picker-menu';
+      menu.setAttribute('role', 'menu');
+      menu.hidden = true;
+
+      options.forEach((option) => {
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.setAttribute('role', 'menuitem');
+        item.dataset.pickerValue = option.value;
+        item.textContent = option.title;
+        menu.appendChild(item);
+      });
+      picker.appendChild(menu);
+
+      const closeMenu = () => {
+        menu.hidden = true;
+        picker.classList.remove('source-picker-open');
+        button.setAttribute('aria-expanded', 'false');
+      };
+      const openMenu = () => {
+        document.querySelectorAll('.source-file-picker.source-picker-open').forEach((other) => {
+          if (other !== picker && typeof other._fanqieClosePicker === 'function') {
+            other._fanqieClosePicker();
+          }
+        });
+        menu.hidden = false;
+        picker.classList.add('source-picker-open');
+        button.setAttribute('aria-expanded', 'true');
+      };
+      picker._fanqieClosePicker = closeMenu;
+
+      button.addEventListener('click', (event) => {
+        event.stopPropagation();
+        if (menu.hidden) openMenu();
+        else closeMenu();
+      });
+      menu.addEventListener('click', async (event) => {
+        const option = event.target.closest('[data-picker-value]');
+        if (!option) return;
+        event.stopPropagation();
+        closeMenu();
+        await onSelect(option.dataset.pickerValue);
+      });
+
+      if (!this._fanqiePickerDocumentHandlersBound) {
+        document.addEventListener('click', (event) => {
+          document.querySelectorAll('.source-file-picker.source-picker-open').forEach((activePicker) => {
+            if (!activePicker.contains(event.target) && typeof activePicker._fanqieClosePicker === 'function') {
+              activePicker._fanqieClosePicker();
+            }
+          });
+        });
+        document.addEventListener('keydown', (event) => {
+          if (event.key !== 'Escape') return;
+          document.querySelectorAll('.source-file-picker.source-picker-open').forEach((activePicker) => {
+            if (typeof activePicker._fanqieClosePicker === 'function') activePicker._fanqieClosePicker();
+          });
+        });
+        this._fanqiePickerDocumentHandlersBound = true;
+      }
+    },
     bindFanqieLoginStateControls(prefix, configPath) {
-      document.getElementById(`${prefix}ChooseAuthState`)?.addEventListener('click', async () => {
-        const path = this.api.choose_login_state
-          ? await this.api.choose_login_state(configPath)
-          : await this.api.choose_file(configPath, false, 'state.json');
-        if (!path) return;
+      const inputId = `${prefix}AuthStatePath`;
+      const button = document.getElementById(`${prefix}ChooseAuthState`);
+      const picker = button?.closest('.file-picker');
+      if (!button || !picker) return;
+
+      this.bindFanqiePickerMenu(button, picker, [
+        {
+          value: 'file',
+          title: '选择 state.json',
+        },
+        {
+          value: 'folder',
+          title: '选择状态目录',
+        },
+        {
+          value: 'default',
+          title: '使用默认 state.json',
+        },
+      ], async (kind) => {
+        let path = '';
+        if (kind === 'file') {
+          path = await this.api.choose_file(configPath, false, 'state.json');
+          if (!path) return;
+        } else if (kind === 'folder') {
+          path = await this.api.choose_folder(configPath);
+          if (!path) return;
+        } else if (kind !== 'default') {
+          return;
+        }
+
         this.setConfigValue(configPath, path);
-        this.updateFilePicker(`${prefix}AuthStatePath`, path, '默认 state.json');
+        this.updateFilePicker(inputId, path, '默认 state.json');
         await this.persistPageConfig(this.currentPage);
       });
     },
@@ -365,10 +460,26 @@
       sync();
     },
     bindChooseSource(buttonId, configPath, inputId, emptyText, afterChoose) {
-      document.getElementById(buttonId)?.addEventListener('click', async () => {
-        const path = this.api.choose_source
-          ? await this.api.choose_source(configPath)
-          : await this.api.choose_file(configPath, false, 'novel.txt');
+      const button = document.getElementById(buttonId);
+      const picker = button?.closest('.file-picker');
+      if (!button || !picker) return;
+
+      this.bindFanqiePickerMenu(button, picker, [
+        {
+          value: 'file',
+          title: '选择小说文件',
+        },
+        {
+          value: 'folder',
+          title: '选择章节文件夹',
+        },
+      ], async (kind) => {
+        let path = '';
+        if (kind === 'folder') {
+          path = await this.api.choose_folder(configPath);
+        } else if (kind === 'file') {
+          path = await this.api.choose_file(configPath, false, '');
+        }
         if (!path) return;
         this.setConfigValue(configPath, path);
         this.updateFilePicker(inputId, path, emptyText);

@@ -104,12 +104,27 @@ def parse_chapters_file(path: str | Path) -> list[ChapterBlock]:
     if not file_path.exists():
         raise FileNotFoundError(f"找不到小说文件：{file_path}")
     text, _encoding = read_text_and_encoding(file_path)
+    if not _looks_like_text_content(text):
+        raise RuntimeError(f"所选文件不是可识别的纯文本文件：{file_path}")
     chapters = parse_chapter_blocks(text)
     for chapter in chapters:
         chapter.source_path = file_path
     if not chapters:
         raise RuntimeError("没有解析到章节标题。请确认格式类似：第1章 标题")
     return chapters
+
+
+def _looks_like_text_content(text: str) -> bool:
+    if "\x00" in text:
+        return False
+    if not text:
+        return True
+    disallowed_controls = sum(
+        1
+        for char in text
+        if ord(char) < 32 and char not in "\r\n\t\f"
+    )
+    return disallowed_controls / len(text) <= 0.01
 
 
 def detect_chapter_markers(text: str) -> list[tuple[int, str]]:
@@ -163,7 +178,6 @@ def first_chapter_number(text: str) -> Optional[int]:
 import re
 from dataclasses import dataclass
 
-SUPPORTED_CHAPTER_SOURCE_SUFFIXES = {".txt", ".md"}
 
 
 @dataclass(slots=True)
@@ -197,10 +211,11 @@ def read_chapter_source(source: str | Path) -> ChapterSourceSummary:
     if source_path.is_dir():
         chapters = _parse_chapter_folder(source_path)
         if not chapters:
-            raise RuntimeError("文件夹中没有识别到章节文件。支持 .txt / .md。")
+            raise RuntimeError("文件夹中没有识别到可读取的章节文件。")
         return ChapterSourceSummary(source_path=source_path, source_kind="folder", chapters=chapters)
-    if source_path.suffix.lower() not in SUPPORTED_CHAPTER_SOURCE_SUFFIXES:
-        raise RuntimeError("请选择 TXT / Markdown 文件，或包含章节文件的文件夹。")
+    if not source_path.is_file():
+        raise RuntimeError(f"请选择有效的小说文件或章节文件夹：{source_path}")
+
     chapters = parse_chapters_file(source_path)
     return ChapterSourceSummary(source_path=source_path, source_kind="file", chapters=chapters)
 
@@ -230,15 +245,24 @@ def load_chapters_by_number(source: str | Path, chapters: Iterable[int], source_
 
 def _parse_chapter_folder(folder: Path) -> list[ChapterBlock]:
     scan_dir = folder / "chapters" if (folder / "chapters").is_dir() else folder
-    files = [path for path in scan_dir.iterdir() if path.is_file() and path.suffix.lower() in SUPPORTED_CHAPTER_SOURCE_SUFFIXES]
+    files = [
+        path
+        for path in scan_dir.iterdir()
+        if path.is_file() and not path.name.startswith(".")
+    ]
     found: list[ChapterBlock] = []
     for path in sorted(files, key=_chapter_file_sort_key):
-        found.extend(_parse_single_chapter_file(path))
+        try:
+            found.extend(_parse_single_chapter_file(path))
+        except (OSError, RuntimeError, UnicodeError):
+            continue
     return sorted(found, key=lambda chapter: (chapter.number, str(chapter.source_path or "")))
 
 
 def _parse_single_chapter_file(path: Path) -> list[ChapterBlock]:
     text, _encoding = read_text_and_encoding(path)
+    if not _looks_like_text_content(text):
+        return []
     blocks = parse_chapter_blocks(text)
     if blocks:
         for block in blocks:
