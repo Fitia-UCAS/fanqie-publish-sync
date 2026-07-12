@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from backend.runtime.paths import CONFIG_FILE, LEGACY_CONFIG_FILE, ensure_data_directories
+from backend.runtime.paths import CONFIG_FILE, LEGACY_CONFIG_FILE
 
 LEGACY_CONFIG_SECTIONS: dict[str, str] = {
     "extract_novel": "process_novel",
@@ -123,7 +123,6 @@ DEFAULT_CONFIG: dict[str, Any] = {
 
 
 def load_config() -> dict[str, Any]:
-    ensure_data_directories()
     data = _read_json(CONFIG_FILE)
     if not data and LEGACY_CONFIG_FILE.exists():
         data = _read_json(LEGACY_CONFIG_FILE)
@@ -134,7 +133,6 @@ def load_config() -> dict[str, Any]:
 
 
 def save_config(config: dict[str, Any]) -> None:
-    ensure_data_directories()
     merged = _merge_default(config)
     CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
     CONFIG_FILE.write_text(json.dumps(merged, ensure_ascii=False, indent=2), encoding="utf-8")

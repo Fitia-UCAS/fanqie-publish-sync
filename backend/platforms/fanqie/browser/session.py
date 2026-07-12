@@ -8,14 +8,7 @@ from pathlib import Path
 from itertools import count
 from typing import Any
 
-try:
-    from playwright.sync_api import Page, sync_playwright
-except Exception as exc:
-    Page = Any
-    sync_playwright = None
-    _PLAYWRIGHT_IMPORT_ERROR: Exception | None = exc
-else:
-    _PLAYWRIGHT_IMPORT_ERROR = None
+Page = Any
 
 from backend.runtime.paths import BROWSER_DATA_DIR, CHAPTER_SYNC_DEBUG_DIR, PUBLISH_DEBUG_DIR
 from backend.runtime.defaults import BROWSER_CHANNEL, VIEWPORT
@@ -65,8 +58,10 @@ def maximize_page_window(page: Page) -> None:
 
 
 def make_context(headless: bool = False, *, debug_category: str = "chapter_sync", debug_enabled: bool | None = None, failure_debug_enabled: bool | None = None, auth_state_path: str | Path | None = None):
-    if sync_playwright is None:
-        raise RuntimeError("缺少依赖：playwright。请先执行：pip install -r requirements.txt") from _PLAYWRIGHT_IMPORT_ERROR
+    try:
+        from playwright.sync_api import sync_playwright
+    except Exception as exc:
+        raise RuntimeError("缺少依赖：playwright。请先执行：pip install -r requirements.txt") from exc
 
     p = sync_playwright().start()
     BROWSER_DATA_DIR.mkdir(parents=True, exist_ok=True)

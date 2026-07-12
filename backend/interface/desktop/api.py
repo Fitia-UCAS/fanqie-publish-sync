@@ -24,7 +24,7 @@ from backend.interface.desktop.events import FrontendBridge
 from backend.interface.desktop.tasks import DesktopTaskCoordinator, log_category_for_page
 from backend.runtime.data_reset import reset_app_data, reset_login_state
 from backend.runtime.logging import setup_logging
-from backend.runtime.paths import FANQIE_AUTH_STATE_FILE, LOG_FILE, ensure_data_directories, get_state_paths, latest_log_file
+from backend.runtime.paths import FANQIE_AUTH_STATE_FILE, LOG_FILE, get_state_paths, latest_log_file
 from backend.runtime.jobs.callbacks import TaskCallbacks
 from backend.runtime.jobs.results import TaskResult
 
@@ -40,7 +40,6 @@ def _config_value(config: dict[str, Any], dotted_path: str) -> str:
 
 class WebviewApi:
     def __init__(self, services: ApplicationServices | None = None) -> None:
-        ensure_data_directories()
         self._window: Any | None = None
         self._config = load_config()
         self._services = services or create_application_services()

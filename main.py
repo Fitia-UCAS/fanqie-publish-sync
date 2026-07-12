@@ -6,7 +6,6 @@ import subprocess
 import sys
 import ctypes
 from pathlib import Path
-from typing import NamedTuple
 
 if len(sys.argv) > 1 and sys.argv[1] == "--path-picker":
     from backend.infrastructure.desktop.dialogs import _subprocess_picker_main
@@ -18,7 +17,6 @@ try:
 except Exception as exc:
     raise SystemExit("缺少依赖：pywebview。请先执行：pip install -r requirements.txt") from exc
 
-from backend.runtime.data_reset import reset_runtime_data
 from backend.runtime.logging import setup_logging
 from backend.runtime.paths import ensure_data_directories
 from backend.interface.desktop.api import WebviewApi
@@ -43,14 +41,6 @@ def hide_child_console_windows() -> None:
         return original_popen(*args, **kwargs)
 
     subprocess.Popen = hidden_popen
-
-
-
-class WorkArea(NamedTuple):
-    left: int
-    top: int
-    width: int
-    height: int
 
 
 
@@ -95,37 +85,8 @@ def apply_native_window_icon() -> None:
         pass
 
 
-def get_primary_work_area() -> WorkArea | None:
-    if sys.platform == "win32":
-        try:
-            import ctypes
-
-            class Rect(ctypes.Structure):
-                _fields_ = [("left", ctypes.c_long), ("top", ctypes.c_long), ("right", ctypes.c_long), ("bottom", ctypes.c_long)]
-
-            rect = Rect()
-            user32 = ctypes.windll.user32
-            if user32.SystemParametersInfoW(0x0030, 0, ctypes.byref(rect), 0):
-                return WorkArea(rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top)
-            return WorkArea(0, 0, user32.GetSystemMetrics(0), user32.GetSystemMetrics(1))
-        except Exception:
-            return None
-    try:
-        import tkinter as tk
-        root = tk.Tk()
-        root.withdraw()
-        area = WorkArea(0, 0, root.winfo_screenwidth(), root.winfo_screenheight())
-        root.destroy()
-        return area
-    except Exception:
-        return None
-
-
 def get_window_options() -> dict[str, int]:
-    area = get_primary_work_area()
-    if not area or area.width <= 0 or area.height <= 0:
-        return {"width": 1220, "height": 840}
-    return {"width": area.width, "height": area.height, "x": area.left, "y": area.top}
+    return {"width": 1220, "height": 840}
 
 
 def maximize_window(window: object) -> None:
@@ -153,7 +114,6 @@ def get_webview_storage_path() -> Path:
 
 def main() -> None:
     hide_child_console_windows()
-    reset_runtime_data(preserve_auth_state=True)
     ensure_data_directories()
     setup_logging()
     base_dir = Path(__file__).resolve().parent

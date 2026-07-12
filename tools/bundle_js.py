@@ -1,0 +1,59 @@
+"""将 frontend JS 源文件拼接为单个 bundle.js。
+
+加载顺序必须与原始 index.html 中的 <script> 标签顺序一致。
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+ROOT_DIR = Path(__file__).resolve().parents[1]
+ASSETS_DIR = ROOT_DIR / "frontend" / "assets"
+BUNDLE_OUT = ASSETS_DIR / "bundle.js"
+
+HEADER = "// bundle.js —— 由 tools/bundle_js.py 自动生成，请勿手动编辑\n\n"
+
+SCRIPTS = [
+    "assets/core/page_registry.js",
+    "assets/core/form_controls.js",
+    "assets/core/state_store.js",
+    "assets/core/task_panel.js",
+    "assets/core/novel_splitter.js",
+    "assets/core/character_material.js",
+    "assets/core/current_plot.js",
+    "assets/core/webnovel_writer.js",
+    "assets/pages/novel_processor.js",
+    "assets/pages/fanqie_syncer.js",
+    "assets/pages/fanqie_publisher.js",
+    "assets/pages/novel_crawler.js",
+    "assets/pages/character_material.js",
+    "assets/pages/current_plot.js",
+    "assets/pages/webnovel_writer.js",
+    "assets/app.js",
+]
+
+
+def bundle() -> None:
+    parts: list[str] = [HEADER]
+    total_bytes = 0
+
+    for src in SCRIPTS:
+        path = ROOT_DIR / "frontend" / src
+        if not path.is_file():
+            raise SystemExit(f"文件不存在: {path}")
+
+        content = path.read_text(encoding="utf-8")
+        total_bytes += len(content.encode("utf-8"))
+
+        parts.append(f"\n// --- {src} ---\n")
+        parts.append(content)
+        parts.append("\n")
+
+    BUNDLE_OUT.parent.mkdir(parents=True, exist_ok=True)
+    BUNDLE_OUT.write_text("".join(parts), encoding="utf-8")
+    print(f"✓ {BUNDLE_OUT}")
+    print(f"  {len(SCRIPTS)} 个文件 → {total_bytes:,} bytes")
+
+
+if __name__ == "__main__":
+    bundle()
