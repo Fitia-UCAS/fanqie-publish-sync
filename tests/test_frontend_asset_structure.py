@@ -8,44 +8,44 @@ FRONTEND_DIR = ROOT_DIR / "frontend"
 
 def test_frontend_core_scripts_are_split_from_app_shell() -> None:
     core_dir = FRONTEND_DIR / "assets" / "core"
-    assert (core_dir / "ui_page_registry.js").exists()
-    assert (core_dir / "ui_form_controls.js").exists()
-    assert (core_dir / "ui_task_panel.js").exists()
-    assert (core_dir / "ui_state_store.js").exists()
-    assert (core_dir / "ui_novel_splitter.js").exists()
-    assert (core_dir / "ui_character_material.js").exists()
-    assert (core_dir / "ui_webnovel_writer.js").exists()
+    assert (core_dir / "page_registry.js").exists()
+    assert (core_dir / "form_controls.js").exists()
+    assert (core_dir / "task_panel.js").exists()
+    assert (core_dir / "state_store.js").exists()
+    assert (core_dir / "novel_splitter.js").exists()
+    assert (core_dir / "character_material.js").exists()
+    assert (core_dir / "webnovel_writer.js").exists()
     assert len((FRONTEND_DIR / "assets" / "app.js").read_text(encoding="utf-8").splitlines()) < 460
 
 
 def test_frontend_page_files_use_page_object_names() -> None:
     page_dir = FRONTEND_DIR / "assets" / "pages"
     expected_pages = {
-        "novel_processor_page",
-        "fanqie_publisher_page",
-        "fanqie_syncer_page",
-        "novel_crawler_page",
-        "character_material_page",
-        "current_plot_page",
-        "webnovel_writer_page",
+        "novel_processor",
+        "fanqie_publisher",
+        "fanqie_syncer",
+        "novel_crawler",
+        "character_material",
+        "current_plot",
+        "webnovel_writer",
     }
     assert {path.stem for path in page_dir.glob("*.js")} == expected_pages
 
 
 def test_frontend_core_scripts_load_before_app_shell() -> None:
     html = (FRONTEND_DIR / "index.html").read_text(encoding="utf-8")
-    assert html.index("assets/core/ui_page_registry.js") < html.index("assets/app.js")
-    assert html.index("assets/core/ui_state_store.js") < html.index("assets/core/ui_task_panel.js")
-    assert html.index("assets/core/ui_task_panel.js") < html.index("assets/core/ui_novel_splitter.js")
-    assert html.index("assets/core/ui_novel_splitter.js") < html.index("assets/core/ui_character_material.js")
-    assert html.index("assets/core/ui_character_material.js") < html.index("assets/app.js")
+    assert html.index("assets/core/page_registry.js") < html.index("assets/app.js")
+    assert html.index("assets/core/state_store.js") < html.index("assets/core/task_panel.js")
+    assert html.index("assets/core/task_panel.js") < html.index("assets/core/novel_splitter.js")
+    assert html.index("assets/core/novel_splitter.js") < html.index("assets/core/character_material.js")
+    assert html.index("assets/core/character_material.js") < html.index("assets/app.js")
     for page_file in [
-        "novel_processor_page.js",
-        "fanqie_publisher_page.js",
-        "fanqie_syncer_page.js",
-        "novel_crawler_page.js",
-        "character_material_page.js",
-        "webnovel_writer_page.js",
+        "novel_processor.js",
+        "fanqie_publisher.js",
+        "fanqie_syncer.js",
+        "novel_crawler.js",
+        "character_material.js",
+        "webnovel_writer.js",
     ]:
         assert html.index(f"assets/pages/{page_file}") < html.index("assets/app.js")
 
@@ -60,9 +60,9 @@ def test_header_has_separate_reset_data_and_authorization_buttons() -> None:
     assert 'reset_login' in app_js
 
 def test_novel_processor_uses_console_open_directory_only() -> None:
-    page_js = (FRONTEND_DIR / "assets" / "pages" / "novel_processor_page.js").read_text(encoding="utf-8")
+    page_js = (FRONTEND_DIR / "assets" / "pages" / "novel_processor.js").read_text(encoding="utf-8")
     app_js = (FRONTEND_DIR / "assets" / "app.js").read_text(encoding="utf-8")
-    task_panel_js = (FRONTEND_DIR / "assets" / "core" / "ui_task_panel.js").read_text(encoding="utf-8")
+    task_panel_js = (FRONTEND_DIR / "assets" / "core" / "task_panel.js").read_text(encoding="utf-8")
 
     assert "exOpenOutputDir" not in page_js
     assert "exOpenOutputDir" not in app_js
@@ -70,7 +70,7 @@ def test_novel_processor_uses_console_open_directory_only() -> None:
 
 
 def test_console_open_directory_uses_feature_data_roots_from_state() -> None:
-    task_panel_js = (FRONTEND_DIR / "assets" / "core" / "ui_task_panel.js").read_text(encoding="utf-8")
+    task_panel_js = (FRONTEND_DIR / "assets" / "core" / "task_panel.js").read_text(encoding="utf-8")
 
     assert "statePath(key)" in task_panel_js
     assert "process_novel: 'novel_processor'" in task_panel_js
@@ -90,7 +90,7 @@ def test_console_open_directory_uses_feature_data_roots_from_state() -> None:
 
 
 def test_crawler_page_replaces_html_preview_with_detailed_log() -> None:
-    page_js = (FRONTEND_DIR / "assets" / "pages" / "novel_crawler_page.js").read_text(encoding="utf-8")
+    page_js = (FRONTEND_DIR / "assets" / "pages" / "novel_crawler.js").read_text(encoding="utf-8")
     app_js = (FRONTEND_DIR / "assets" / "app.js").read_text(encoding="utf-8")
     config_text = (ROOT_DIR / "config" / "config.json").read_text(encoding="utf-8")
 
@@ -120,11 +120,11 @@ def test_common_buttons_use_consistent_height_tokens() -> None:
 
 def test_frontend_task_state_store_is_loaded_before_task_panel() -> None:
     html = (FRONTEND_DIR / "index.html").read_text(encoding="utf-8")
-    store_js = (FRONTEND_DIR / "assets" / "core" / "ui_state_store.js").read_text(encoding="utf-8")
-    task_panel_js = (FRONTEND_DIR / "assets" / "core" / "ui_task_panel.js").read_text(encoding="utf-8")
+    store_js = (FRONTEND_DIR / "assets" / "core" / "state_store.js").read_text(encoding="utf-8")
+    task_panel_js = (FRONTEND_DIR / "assets" / "core" / "task_panel.js").read_text(encoding="utf-8")
     app_js = (FRONTEND_DIR / "assets" / "app.js").read_text(encoding="utf-8")
 
-    assert html.index("assets/core/ui_state_store.js") < html.index("assets/core/ui_task_panel.js")
+    assert html.index("assets/core/state_store.js") < html.index("assets/core/task_panel.js")
     assert "NovelTaskStateStore" in store_js
     assert "applyTaskEvent(event)" in task_panel_js
     assert "terminal-metrics" not in task_panel_js
@@ -166,7 +166,7 @@ def test_panels_use_flat_shared_surface_style() -> None:
 
 def test_output_panel_uses_status_message_without_metric_bar() -> None:
     css = (FRONTEND_DIR / "assets" / "styles.css").read_text(encoding="utf-8")
-    task_panel_js = (FRONTEND_DIR / "assets" / "core" / "ui_task_panel.js").read_text(encoding="utf-8")
+    task_panel_js = (FRONTEND_DIR / "assets" / "core" / "task_panel.js").read_text(encoding="utf-8")
 
     assert "--output-panel-height" in css
     assert "--settings-panel-height" in css
@@ -180,10 +180,10 @@ def test_output_panel_uses_status_message_without_metric_bar() -> None:
 
 def test_primary_task_buttons_share_icon_action_markup() -> None:
     page_dir = FRONTEND_DIR / "assets" / "pages"
-    publisher_js = (page_dir / "fanqie_publisher_page.js").read_text(encoding="utf-8")
-    syncer_js = (page_dir / "fanqie_syncer_page.js").read_text(encoding="utf-8")
-    crawler_js = (page_dir / "novel_crawler_page.js").read_text(encoding="utf-8")
-    processor_js = (page_dir / "novel_processor_page.js").read_text(encoding="utf-8")
+    publisher_js = (page_dir / "fanqie_publisher.js").read_text(encoding="utf-8")
+    syncer_js = (page_dir / "fanqie_syncer.js").read_text(encoding="utf-8")
+    crawler_js = (page_dir / "novel_crawler.js").read_text(encoding="utf-8")
+    processor_js = (page_dir / "novel_processor.js").read_text(encoding="utf-8")
 
     for page_js in [publisher_js, syncer_js, crawler_js, processor_js]:
         assert "big-action primary-action" in page_js
