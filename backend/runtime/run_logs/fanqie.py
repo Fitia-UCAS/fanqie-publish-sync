@@ -161,7 +161,6 @@ class FanqieTaskLog:
             "编辑页遮罩",
             "检测到错别字",
             "启动时已清理",
-            "启动清理",
             "正在选择“是否使用AI",
             "正在读取章节列表字数",
             "章节列表字数读取完成",
@@ -201,5 +200,4 @@ class FanqieTaskLog:
         if task_kind == "auto_publish":
             return task_log_file("auto_publish")
         return task_log_file("chapter_sync")
-
 

@@ -23,25 +23,37 @@ window.renderFanqieSyncerPage = function renderFanqieSyncerPage(app) {
               <div class="option-grid two-col fanqie-option-grid">
                 <label><input type="checkbox" id="syUseAi" ${cfg.useAi ? 'checked' : ''}/> 使用 AI</label>
                 <label><input type="checkbox" id="syVerifyAfterPublish" ${cfg.verifyAfterPublish !== false ? 'checked' : ''}/> 列表校验</label>
-                <label><input type="checkbox" id="syHeadless" ${cfg.headless ? 'checked' : ''}/> 后台无头</label>
                 <label><input type="checkbox" id="syDebugScreenshots" ${cfg.debugScreenshots !== false ? 'checked' : ''}/> 步骤截图</label>
                 <label><input type="checkbox" id="syFailureScreenshots" ${cfg.failureScreenshots !== false ? 'checked' : ''}/> 失败截图</label>
                 <label><input type="checkbox" id="syGitTracking" ${cfg.gitTracking !== false ? 'checked' : ''}/> Git追踪</label>
-                <label><input type="checkbox" id="syCleanBeforeRun" ${cfg.cleanBeforeRun !== false ? 'checked' : ''}/> 启动清理</label>
+                <label><input type="checkbox" id="syManualSchedule" ${cfg.manualSchedule ? 'checked' : ''}/> 手动定时</label>
+              </div>
+              <div class="manual-schedule-fields ${cfg.manualSchedule ? '' : 'hidden'}" id="syManualScheduleFields">
+                <div class="field schedule-date-field"><label>起始日期</label><input class="input" id="syScheduleStartDate" type="date" value="${app.attr(cfg.scheduleStartDate || '')}" /></div>
+                <div class="schedule-time-grid">
+                  <div class="field"><label>上午时间</label><input class="input" id="syScheduleMorningTime" type="time" value="${app.attr(cfg.scheduleMorningTime || '10:00')}" /></div>
+                  <div class="field"><label>上午章数</label><input class="input" id="syScheduleMorningCount" type="number" min="0" value="${app.attr(cfg.scheduleMorningCount || 1)}" /></div>
+                  <div class="field"><label>下午时间</label><input class="input" id="syScheduleAfternoonTime" type="time" value="${app.attr(cfg.scheduleAfternoonTime || '18:00')}" /></div>
+                  <div class="field"><label>下午章数</label><input class="input" id="syScheduleAfternoonCount" type="number" min="0" value="${app.attr(cfg.scheduleAfternoonCount || 0)}" /></div>
+                </div>
               </div>
               <div class="group-label">执行操作</div>
               <div class="action-stack fanqie-actions">
                 <div class="action-row two-actions">
-                  <button class="big-action primary-action" data-sync-op="publish"><span>↻</span><div><b>开始同步</b></div></button>
-                  <button class="big-action primary-action" id="syStop" type="button"><span>×</span><div><b>停止同步</b></div></button>
+                  <button class="big-action primary-action" data-sync-op="publish"><span>↑</span><div><b>开始同步</b></div></button>
+                  <button class="big-action primary-action" id="syPause" type="button"><span>⏸</span><div><b>暂缓同步</b></div></button>
                 </div>
                 <div class="action-row two-actions">
-                  <button class="big-action primary-action" id="syPause" type="button"><span>⏸</span><div><b>暂停</b></div></button>
-                  <button class="big-action primary-action" id="syResume" type="button"><span>▶</span><div><b>继续</b></div></button>
+                  <button class="big-action primary-action" id="syResume" type="button"><span>▶</span><div><b>继续同步</b></div></button>
+                  <button class="big-action primary-action" id="syStop" type="button"><span>×</span><div><b>终止同步</b></div></button>
                 </div>
                 <div class="action-row two-actions">
                   <button class="big-action primary-action" data-sync-op="pull"><span>↓</span><div><b>开始拉取</b></div></button>
-                  <button class="big-action primary-action" data-sync-op="compare"><span>≠</span><div><b>打开对比</b></div></button>
+                  <button class="big-action primary-action" id="syPullPause" type="button"><span>⏸</span><div><b>暂缓拉取</b></div></button>
+                </div>
+                <div class="action-row two-actions">
+                  <button class="big-action primary-action" id="syPullResume" type="button"><span>▶</span><div><b>继续拉取</b></div></button>
+                  <button class="big-action primary-action" id="syPullStop" type="button"><span>×</span><div><b>终止拉取</b></div></button>
                 </div>
               </div>
             </div>

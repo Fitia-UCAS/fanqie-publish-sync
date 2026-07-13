@@ -210,17 +210,6 @@ button:disabled { opacity: .52; cursor: not-allowed; transform: none !important;
 }
 .page { width: 100%; }
 
-.process-stack {
-  width: 100%;
-  display: grid;
-  gap: var(--page-vertical-padding);
-  align-items: start;
-}
-.process-stack .fanqie-task-grid {
-  height: var(--settings-panel-height);
-  min-height: 0;
-  margin-inline: auto;
-}
 .fanqie-task-grid {
   width: min(var(--workspace-width), calc(100% - var(--page-gutter)));
   height: var(--settings-panel-height);
@@ -900,33 +889,47 @@ button:disabled { opacity: .52; cursor: not-allowed; transform: none !important;
 .source-picker-menu {
   position: absolute;
   top: calc(100% + 7px);
+  left: 0;
   right: 0;
   z-index: 100;
-  min-width: 180px;
-  width: max-content;
-  max-width: calc(100vw - 48px);
-  padding: 6px;
+  width: 100%;
+  min-width: 0;
+  padding: 5px;
   border: 1px solid #e2e8f0;
   border-radius: 13px;
-  background: #fff;
-  box-shadow: 0 16px 36px rgba(15, 23, 42, .16);
+  background: #f8fafc;
+  box-shadow: 0 14px 32px rgba(15, 23, 42, .13);
+  font-family: "Outfit", "Inter", "Microsoft YaHei UI", "Segoe UI", system-ui, sans-serif;
+  font-size: var(--control-font-size);
+  font-weight: var(--control-font-weight);
 }
 .source-picker-menu[hidden] {
   display: none;
 }
 .source-picker-menu button {
-  display: block;
+  display: flex;
+  align-items: center;
   width: 100%;
-  padding: 10px 12px;
-  border: 0;
-  border-radius: 9px;
+  min-height: var(--control-height);
+  padding: 0 13px;
+  border: 1px solid transparent;
+  border-radius: 10px;
   background: transparent;
   color: #334155;
   text-align: left;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: 1.2;
   cursor: pointer;
+}
+.source-picker-menu button + button {
+  margin-top: 2px;
 }
 .source-picker-menu button:hover,
 .source-picker-menu button:focus-visible {
   outline: none;
-  background: #f1f5f9;
+  border-color: rgb(var(--accent-100));
+  background: rgb(var(--accent-50));
+  color: rgb(var(--accent-700));
 }

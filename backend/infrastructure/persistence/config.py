@@ -9,34 +9,12 @@ from typing import Any
 from backend.runtime.paths import CONFIG_FILE, LEGACY_CONFIG_FILE
 
 LEGACY_CONFIG_SECTIONS: dict[str, str] = {
-    "extract_novel": "process_novel",
     "auto_publish_chapters": "auto_publish",
     "sync_publish_chapters": "chapter_sync",
-    "crawl_novel": "web_crawler",
 }
 
 DEFAULT_CONFIG: dict[str, Any] = {
     "activePage": "auto_publish",
-    "process_novel": {
-        "novelFile": "",
-        "batchFolder": "",
-        "outputFile": "",
-        "chapter": 1,
-        "aroundChapter": 1,
-        "start": 1,
-        "end": 1,
-    },
-    "clean_text": {
-        "adInputFile": "",
-        "adBatchFolder": "",
-        "moveInputFile": "",
-        "moveBatchFolder": "",
-        "adProfile": "default",
-        "overwrite": True,
-        "backup": True,
-        "normalizePunctuation": True,
-        "maxMoveChars": 120,
-    },
     "auto_publish": {
         "novelFile": "",
         "chapterManageUrl": "",
@@ -48,7 +26,6 @@ DEFAULT_CONFIG: dict[str, Any] = {
         "failureScreenshots": True,
         "dedupeDebugScreenshots": True,
         "gitTracking": True,
-        "cleanBeforeRun": True,
         "operation": "publish",
     },
     "chapter_sync": {
@@ -62,62 +39,7 @@ DEFAULT_CONFIG: dict[str, Any] = {
         "failureScreenshots": True,
         "dedupeDebugScreenshots": True,
         "gitTracking": True,
-        "cleanBeforeRun": True,
         "operation": "publish",
-    },
-    "web_crawler": {
-        "novelUrl": "",
-        "outputFile": "",
-        "outputFileManual": False,
-        "outputAutoUrl": "",
-        "start": 1,
-        "end": 0,
-        "maxWorkers": 16,
-        "timeout": 25,
-        "requestDelayMin": 0.12,
-        "requestDelayMax": 0.35,
-        "maxRetries": 3,
-        "htmlFallback": True,
-        "detailedLog": False,
-    },
-    "character_material": {
-        "source": "",
-        "outputDir": "",
-        "outputFile": "",
-        "characterTarget": "",
-        "keyword": "",
-        "platform": "deepseek",
-        "apiKey": "",
-        "baseUrl": "",
-        "modelName": "",
-        "temperature": 0.2,
-        "chapter": "",
-        "start": "",
-        "end": "",
-        "allChapters": True,
-        "concurrent": True,
-        "maxWorkers": 4,
-    },
-    "current_plot": {
-        "source": "",
-        "currentPlotFile": "",
-        "outputDir": "",
-        "outputFile": "",
-        "platform": "deepseek",
-        "apiKey": "",
-        "baseUrl": "",
-        "modelName": "",
-        "temperature": 0.2,
-        "chapter": "",
-        "aroundChapter": "",
-        "start": "",
-        "end": "",
-        "scope": "range",
-        "mode": "extract_merge",
-        "targetWords": 260,
-        "recentContextCount": 5,
-        "replaceExisting": True,
-        "maxWorkers": 4,
     },
 }
 
@@ -207,5 +129,3 @@ def _remove_unknown_config_keys(config: dict[str, Any], defaults: dict[str, Any]
         default_value = defaults.get(key)
         if isinstance(value, dict) and isinstance(default_value, dict):
             _remove_unknown_config_keys(value, default_value)
-
-

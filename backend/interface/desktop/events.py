@@ -2,7 +2,6 @@ from __future__ import annotations
 
 
 import json
-import re
 from typing import Any
 
 from backend.runtime.logging import get_logger
@@ -61,9 +60,4 @@ class FrontendBridge:
 
     @staticmethod
     def _should_suppress_ui_log(page: str, message: str) -> bool:
-        if page != "web_crawler":
-            return False
-
-        return bool(re.match(r"^完成：第\s*\d+\s*章", message))
-
-
+        return False

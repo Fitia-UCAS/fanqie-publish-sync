@@ -14,8 +14,6 @@ def make_chapter_sync_options(
     debug_screenshots: bool,
     failure_screenshots: bool,
     git_tracking: bool,
-    clean_before_run: bool,
-    headless: bool = False,
     auth_state_path: str = "",
     schedule_slots: dict[int, ScheduledPublishSlot] | None = None,
 ) -> ChapterSyncOptions:
@@ -28,8 +26,6 @@ def make_chapter_sync_options(
         debug_screenshots=debug_screenshots,
         failure_screenshots=failure_screenshots,
         git_tracking=git_tracking,
-        clean_before_run=clean_before_run,
-        headless=headless,
         auth_state_path=auth_state_path,
         schedule_slots=dict(schedule_slots or {}),
     )

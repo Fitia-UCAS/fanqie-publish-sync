@@ -3,11 +3,7 @@
     renderTerminalPanel(page) {
       const statusOnly = this.isStatusOnlyPage(page);
       const logless = this.isLoglessPage(page);
-      const isWebnovel = (this.logAliases[page] || page) === 'webnovel_writer';
-      const actions = isWebnovel
-        ? `<button class="terminal-open-log" data-open-log="${this.attr(page)}" type="button">打开日志</button>
-            <button class="terminal-open" data-open-output="${this.attr(page)}" type="button">打开目录</button>`
-        : `<button class="terminal-clear" data-clear-output="${this.attr(page)}" type="button">清空</button>
+      const actions = `<button class="terminal-clear" data-clear-output="${this.attr(page)}" type="button">清空</button>
             <button class="terminal-copy" data-copy-output="${this.attr(page)}" type="button">复制</button>
             <button class="terminal-open-log" data-open-log="${this.attr(page)}" type="button">打开日志</button>
             <button class="terminal-open-backup" data-open-backup="${this.attr(page)}" type="button">打开备份</button>
@@ -35,19 +31,10 @@
     },
     outputPathForPage(page) {
       const featureRootPages = {
-        process_novel: 'novel_processor',
-        process_novel_batch: 'novel_processor',
-        novel_splitter: 'novel_processor',
-        clean_text_ads: 'novel_processor',
-        clean_text_breaks: 'novel_processor',
         auto_publish: 'fanqie_publisher',
         chapter_sync: 'fanqie_syncer',
-        character_material: 'character_material',
-        current_plot: 'current_plot',
-        webnovel_writer: 'webnovel_writer',
       };
       if (featureRootPages[page]) return this.statePath(featureRootPages[page]);
-      if (page === 'web_crawler') return document.getElementById('nsOutput')?.value || this.lastOutputs.web_crawler || this.statePath('web_crawler_outputs');
       return this.lastOutputs[page] || this.statePath('data');
     },
     async openOutputDir(page) {
@@ -111,20 +98,6 @@
       if (text.startsWith('准备执行：')) {
         return text.replace(/^准备执行：/, '');
       }
-      if (page === 'web_crawler') {
-        if (/^(抓取|写入|限流|失败)：第\s*\d+\s*章/.test(text)) return text;
-        if (/^(目录：读取|读取目录：)/.test(text)) return '正在读取目录...';
-        if (/^(目录：完成|目录完成：)/.test(text)) {
-          const match = text.match(/本次\s*(\d+)\s*章/);
-          return match ? `目录读取完成：本次 ${match[1]} 章。` : '目录读取完成。';
-        }
-        if (/^(阶段：第一组参数抓取：|开始第一组参数抓取)/.test(text)) return '正在抓取章节...';
-        if (/^(阶段：第一组参数抓取完成|第一组参数抓取完成)/.test(text)) return text.includes('失败') ? '第一轮完成，正在补抓失败章节...' : '章节抓取完成，正在写出文件...';
-        if (/^(补抓：上一组|上一组完成后仍失败)/.test(text)) return '正在补抓失败章节...';
-        if (/^(限流：|触发限流保护)/.test(text)) return '触发限流保护，稍后继续...';
-        if (/^正在合并/.test(text)) return '正在合并并写出 TXT 文件...';
-        if (/^(完成：TXT|TXT 文件写出完成)/.test(text)) return 'TXT 文件已写出。';
-      }
       return text;
     },
 
@@ -171,8 +144,6 @@
       if (!text) return;
       this.setTaskStatus(targetPage, text, normalizedLevel);
       if (this.isLoglessPage(targetPage)) return;
-      const isCrawlerChapterLine = /^(抓取|写入|限流|失败)：第\s*\d+\s*章/.test(text);
-      if (targetPage === 'web_crawler' && !isCrawlerChapterLine) return;
       if (!this.logs[targetPage]) this.logs[targetPage] = [];
       const item = { message: text, level: normalizedLevel, time: new Date().toLocaleTimeString() };
       const last = this.logs[targetPage].slice(-1)[0];
@@ -276,14 +247,14 @@
 
       const resultDisplayMode = result && result.resultDisplayMode ? String(result.resultDisplayMode) : '';
       const resultText = result && result.resultText ? String(result.resultText) : '';
-      if (targetPage !== 'webnovel_writer' && ok && resultDisplayMode === 'chapter_text') {
+      if (ok && resultDisplayMode === 'chapter_text') {
         this.activeResultModes[targetPage] = 'chapter_text';
         this.resultTexts[targetPage] = resultText;
         this.showResultText(targetPage, resultText);
         return;
       }
 
-      if (targetPage !== 'webnovel_writer') this.resultTexts[targetPage] = '';
+      this.resultTexts[targetPage] = '';
       const box = document.getElementById(`${targetPage}Log`);
       if (box) {
         box.classList.remove('result-text');
@@ -442,7 +413,11 @@
       document.getElementById('syStop')?.addEventListener('click', () => this.stopTask('chapter_sync_stop', 'chapter_sync'));
       document.getElementById('syPause')?.addEventListener('click', () => this.stopTask('chapter_sync_pause', 'chapter_sync'));
       document.getElementById('syResume')?.addEventListener('click', () => this.stopTask('chapter_sync_resume', 'chapter_sync'));
+      document.getElementById('syPullStop')?.addEventListener('click', () => this.stopTask('chapter_sync_stop', 'chapter_sync'));
+      document.getElementById('syPullPause')?.addEventListener('click', () => this.stopTask('chapter_sync_pause', 'chapter_sync'));
+      document.getElementById('syPullResume')?.addEventListener('click', () => this.stopTask('chapter_sync_resume', 'chapter_sync'));
       this.bindFanqieLoginStateControls('sy', 'chapter_sync.authStatePath');
+      this.bindManualScheduleToggle('sy');
     },
     async runChapterSync(operation) {
       const payload = this.collectPublishPayload('sy', operation);
@@ -499,8 +474,6 @@
         debugScreenshots: !!document.getElementById(`${prefix}DebugScreenshots`)?.checked,
         failureScreenshots: !!document.getElementById(`${prefix}FailureScreenshots`)?.checked,
         gitTracking: !!document.getElementById(`${prefix}GitTracking`)?.checked,
-        cleanBeforeRun: !!document.getElementById(`${prefix}CleanBeforeRun`)?.checked,
-        headless: !!document.getElementById(`${prefix}Headless`)?.checked,
         manualSchedule: !!document.getElementById(`${prefix}ManualSchedule`)?.checked,
         scheduleStartDate: document.getElementById(`${prefix}ScheduleStartDate`)?.value || '',
         scheduleMorningTime: document.getElementById(`${prefix}ScheduleMorningTime`)?.value || '10:00',

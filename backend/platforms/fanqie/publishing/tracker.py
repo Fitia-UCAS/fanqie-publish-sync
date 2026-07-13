@@ -1,37 +1,13 @@
 from __future__ import annotations
 
 from datetime import datetime
-import shutil
 import subprocess
 from pathlib import Path
 from typing import Callable
 
 from backend.platforms.fanqie.publishing.local_source import Chapter
 from backend.features.novel_processing.text_normalizer import normalize_novel_body
-from backend.runtime.paths import PUBLISH_DEBUG_DIR, PUBLISH_TRACKER_DIR
-
-
-def clean_previous_publish_artifacts(*, log: Callable[[str], None]) -> None:
-    cleaned: list[str] = []
-    for directory, label in (
-        (PUBLISH_DEBUG_DIR, "调试截图"),
-        (PUBLISH_TRACKER_DIR, "Git追踪"),
-    ):
-        try:
-            directory.mkdir(parents=True, exist_ok=True)
-            for child in directory.iterdir():
-                if child.is_dir():
-                    shutil.rmtree(child, ignore_errors=True)
-                else:
-                    try:
-                        child.unlink()
-                    except FileNotFoundError:
-                        pass
-            cleaned.append(label)
-        except Exception as exc:
-            log(f"启动清理{label}失败：{exc}")
-    if cleaned:
-        log(f"启动时已清理上次番茄发布数据：{'、'.join(cleaned)}。")
+from backend.runtime.paths import PUBLISH_TRACKER_DIR
 
 
 def track_publish_chapter(chapter_no: int, local: Chapter, *, enabled: bool, log: Callable[[str], None]) -> Path | None:

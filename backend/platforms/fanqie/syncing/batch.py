@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import shutil
 from dataclasses import replace
 from pathlib import Path
 from typing import Callable
@@ -32,8 +31,6 @@ def run_multi_chapter_sync(
     debug_screenshots: bool = True,
     failure_screenshots: bool = True,
     git_tracking: bool = True,
-    clean_before_run: bool = True,
-    headless: bool = False,
     auth_state_path: str = "",
     manual_schedule_enabled: bool = False,
     schedule_start_date: str = "",
@@ -53,8 +50,6 @@ def run_multi_chapter_sync(
         debug_screenshots=debug_screenshots,
         failure_screenshots=failure_screenshots,
         git_tracking=git_tracking,
-        clean_before_run=clean_before_run,
-        headless=headless,
         auth_state_path=auth_state_path,
         schedule_slots=build_schedule_slots(
             chapters,
@@ -66,10 +61,6 @@ def run_multi_chapter_sync(
             afternoon_count=schedule_afternoon_count,
         ),
     )
-    if options.clean_before_run:
-        _clean_previous_sync_artifacts(log=log)
-    else:
-        log("启动清理旧番茄同步数据已关闭。")
     if options.debug_screenshots:
         log(f"番茄同步调试截图已开启：{CHAPTER_SYNC_DEBUG_DIR}")
     else:
@@ -82,7 +73,7 @@ def run_multi_chapter_sync(
     if schedule_desc:
         log(schedule_desc)
 
-    p, context, page = make_context(headless=options.headless, debug_category="chapter_sync", debug_enabled=options.debug_screenshots, failure_debug_enabled=options.failure_screenshots, auth_state_path=options.auth_state_path)
+    p, context, page = make_context(debug_category="chapter_sync", debug_enabled=options.debug_screenshots, failure_debug_enabled=options.failure_screenshots, auth_state_path=options.auth_state_path)
     state = MultiChapterSyncState(chapters=list(chapters), results=[], result_chapter_numbers=[])
     try:
         local_chapters = _local_chapters_by_number(novel_file, chapters)
@@ -137,30 +128,6 @@ class MultiChapterSyncState:
         self.result_chapter_numbers.append(chapter_no)
 
 
-def _clean_previous_sync_artifacts(*, log: Callable[[str], None]) -> None:
-    cleaned: list[str] = []
-    for directory, label in (
-        (CHAPTER_SYNC_DEBUG_DIR, "调试截图"),
-        (CHAPTER_SYNC_COMPARE_DIR, "对比报告"),
-        (CHAPTER_SYNC_HISTORY_DIR, "Git追踪"),
-    ):
-        try:
-            directory.mkdir(parents=True, exist_ok=True)
-            for child in directory.iterdir():
-                if child.is_dir():
-                    shutil.rmtree(child, ignore_errors=True)
-                else:
-                    try:
-                        child.unlink()
-                    except FileNotFoundError:
-                        pass
-            cleaned.append(label)
-        except Exception as exc:
-            log(f"启动清理{label}失败：{exc}")
-    if cleaned:
-        log(f"启动时已清理上次番茄同步数据：{'、'.join(cleaned)}。")
-
-
 def _local_chapters_by_number(novel_file: Path, chapters: list[int]) -> dict[int, Chapter]:
     local_chapters = chapters_by_number(parse_chapters(novel_file), "本地小说来源")
     missing_local = [no for no in chapters if no not in local_chapters]
@@ -212,11 +179,11 @@ def _process_chapters(
     )
     for index, chapter_no in enumerate(chapters, start=1):
         if _stop_requested(stop_requested):
-            log("已停止同步。")
+            log("已终止同步。")
             break
         _wait_while_paused(pause_requested=pause_requested, stop_requested=stop_requested, log=log, label="同步")
         if _stop_requested(stop_requested):
-            log("已停止同步。")
+            log("已终止同步。")
             break
         log(f"后台批量处理：第 {chapter_no} 章（{index}/{process_total}）")
         try:
@@ -318,6 +285,6 @@ def _wait_while_paused(
         if _stop_requested(stop_requested):
             return
         if not announced:
-            log(f"{label}已暂停，点击继续后会处理下一章。")
+            log(f"{label}已暂缓，点击继续后会处理下一章。")
             announced = True
         time.sleep(0.5)

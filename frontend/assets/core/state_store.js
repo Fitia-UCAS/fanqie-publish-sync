@@ -44,7 +44,7 @@
       return {
         states: {},
         ensure(page) {
-          const key = String(page || 'process_novel');
+          const key = String(page || 'auto_publish');
           if (!this.states[key]) this.states[key] = initialState(key);
           return this.states[key];
         },
@@ -56,7 +56,7 @@
           return state;
         },
         applyEvent(event) {
-          const page = String(event && event.page || 'process_novel');
+          const page = String(event && event.page || 'auto_publish');
           const state = this.ensure(page);
           const payload = event && event.payload || {};
           const progress = payload.progress || null;

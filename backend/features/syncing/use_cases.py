@@ -47,8 +47,6 @@ class SyncChapters:
             debug_screenshots=bool(payload.get("debugScreenshots", True)),
             failure_screenshots=bool(payload.get("failureScreenshots", True)),
             git_tracking=bool(payload.get("gitTracking", True)),
-            clean_before_run=bool(payload.get("cleanBeforeRun", True)),
-            headless=bool(payload.get("headless", False)),
             auth_state_path=str(payload.get("authStatePath") or ""),
             manual_schedule_enabled=bool(payload.get("manualSchedule", False)),
             schedule_start_date=str(payload.get("scheduleStartDate") or ""),
@@ -62,7 +60,7 @@ class SyncChapters:
         ok_count = sum(1 for item in results if getattr(item, "ok", False))
         task_log.finish(ok_count, len(results))
         stopped = callbacks.stop_requested()
-        message = f"已停止同步：成功 {ok_count}/{len(chapters)}。" if stopped else f"任务结束：成功 {ok_count}/{len(chapters)}。"
+        message = f"已终止同步：成功 {ok_count}/{len(chapters)}。" if stopped else f"任务结束：成功 {ok_count}/{len(chapters)}。"
         return TaskResult(
             (not stopped) and ok_count == len(chapters),
             message,
@@ -74,9 +72,9 @@ class SyncChapters:
 def _operation_flags(operation: str) -> tuple[str, bool]:
     if operation == "pull":
         return "remote_to_local", False
-    if operation == "compare":
-        return "local_to_remote", True
-    return "local_to_remote", False
+    if operation == "publish":
+        return "local_to_remote", False
+    raise ValueError(f"不支持的同步操作：{operation}")
 
 
 def _chapter_range(payload: dict[str, Any]) -> tuple[int, int]:

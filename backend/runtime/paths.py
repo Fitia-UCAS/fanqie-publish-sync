@@ -18,26 +18,6 @@ LOG_NAME = "task.log"
 LATEST_LOG_NAME = "latest_task.log"
 LOG_FILE = SYSTEM_TASK_LOG_DIR / LATEST_LOG_NAME
 
-PROCESS_NOVEL_DIR = DATA_DIR / "novel_processor"
-PROCESS_BACKUP_DIR = PROCESS_NOVEL_DIR / "novel_process_backups"
-PROCESS_NOVEL_LOG_DIR = PROCESS_NOVEL_DIR / "novel_process_tasklogs"
-PROCESS_OUTPUT_DIR = PROCESS_NOVEL_DIR / "novel_process_outputs"
-
-WEB_CRAWLER_DIR = DATA_DIR / "novel_crawler"
-WEB_CRAWLER_BACKUP_DIR = WEB_CRAWLER_DIR / "novel_crawl_backups"
-WEB_CRAWLER_LOG_DIR = WEB_CRAWLER_DIR / "novel_crawl_tasklogs"
-WEB_CRAWLER_OUTPUT_DIR = WEB_CRAWLER_DIR / "novel_crawl_outputs"
-
-CHARACTER_MATERIAL_DIR = DATA_DIR / "character_material"
-CHARACTER_MATERIAL_CHAPTER_DIR = CHARACTER_MATERIAL_DIR / "character_material_chapters"
-CHARACTER_MATERIAL_LOG_DIR = CHARACTER_MATERIAL_DIR / "character_material_tasklogs"
-CHARACTER_MATERIAL_OUTPUT_DIR = CHARACTER_MATERIAL_DIR / "character_material_outputs"
-
-CURRENT_PLOT_DIR = DATA_DIR / "current_plot"
-CURRENT_PLOT_DEBUG_DIR = CURRENT_PLOT_DIR / "current_plot_debug"
-CURRENT_PLOT_LOG_DIR = CURRENT_PLOT_DIR / "current_plot_tasklogs"
-CURRENT_PLOT_OUTPUT_DIR = CURRENT_PLOT_DIR / "current_plot_outputs"
-
 PUBLISH_DIR = DATA_DIR / "fanqie_publisher"
 PUBLISH_DEBUG_DIR = PUBLISH_DIR / "fanqie_publish_debug"
 PUBLISH_TRACKER_DIR = PUBLISH_DIR / "fanqie_publish_tracker"
@@ -60,22 +40,6 @@ PROJECT_DIRECTORIES: tuple[Path, ...] = (
     DATA_DIR,
     APP_SYSTEM_DIR,
     SYSTEM_TASK_LOG_DIR,
-    PROCESS_NOVEL_DIR,
-    PROCESS_BACKUP_DIR,
-    PROCESS_NOVEL_LOG_DIR,
-    PROCESS_OUTPUT_DIR,
-    WEB_CRAWLER_DIR,
-    WEB_CRAWLER_BACKUP_DIR,
-    WEB_CRAWLER_LOG_DIR,
-    WEB_CRAWLER_OUTPUT_DIR,
-    CHARACTER_MATERIAL_DIR,
-    CHARACTER_MATERIAL_CHAPTER_DIR,
-    CHARACTER_MATERIAL_LOG_DIR,
-    CHARACTER_MATERIAL_OUTPUT_DIR,
-    CURRENT_PLOT_DIR,
-    CURRENT_PLOT_DEBUG_DIR,
-    CURRENT_PLOT_LOG_DIR,
-    CURRENT_PLOT_OUTPUT_DIR,
     PUBLISH_DIR,
     PUBLISH_DEBUG_DIR,
     PUBLISH_TRACKER_DIR,
@@ -93,10 +57,6 @@ LOG_CATEGORIES: dict[str, Path] = {
     "system": SYSTEM_TASK_LOG_DIR,
     "auto_publish": AUTO_PUBLISH_LOG_DIR,
     "chapter_sync": CHAPTER_SYNC_LOG_DIR,
-    "process_novel": PROCESS_NOVEL_LOG_DIR,
-    "web_crawler": WEB_CRAWLER_LOG_DIR,
-    "character_material": CHARACTER_MATERIAL_LOG_DIR,
-    "current_plot": CURRENT_PLOT_LOG_DIR,
 }
 
 
@@ -125,10 +85,6 @@ def get_state_paths() -> dict[str, str]:
         "config_file": str(CONFIG_FILE),
         "data": str(DATA_DIR),
         "task_logs": str(DATA_DIR),
-        "novel_processor": str(PROCESS_NOVEL_DIR),
-        "novel_crawler": str(WEB_CRAWLER_DIR),
-        "character_material": str(CHARACTER_MATERIAL_DIR),
-        "current_plot": str(CURRENT_PLOT_DIR),
         "fanqie_publisher": str(PUBLISH_DIR),
         "fanqie_syncer": str(CHAPTER_SYNC_DIR),
         "system_logs": str(SYSTEM_TASK_LOG_DIR),
@@ -136,21 +92,7 @@ def get_state_paths() -> dict[str, str]:
         "publisher_debug": str(PUBLISH_DEBUG_DIR),
         "publisher_tracker": str(PUBLISH_TRACKER_DIR),
         "chapter_sync_logs": str(CHAPTER_SYNC_LOG_DIR),
-        "process_novel_logs": str(PROCESS_NOVEL_LOG_DIR),
-        "web_crawler_logs": str(WEB_CRAWLER_LOG_DIR),
-        "character_material_logs": str(CHARACTER_MATERIAL_LOG_DIR),
-        "current_plot_logs": str(CURRENT_PLOT_LOG_DIR),
-        "process_novel_outputs": str(PROCESS_OUTPUT_DIR),
-        "web_crawler_outputs": str(WEB_CRAWLER_OUTPUT_DIR),
-        "character_material_outputs": str(CHARACTER_MATERIAL_OUTPUT_DIR),
-        "current_plot_outputs": str(CURRENT_PLOT_OUTPUT_DIR),
-        "character_material_chapters": str(CHARACTER_MATERIAL_CHAPTER_DIR),
-        "novel_process_outputs": str(PROCESS_OUTPUT_DIR),
-        "novel_crawl_outputs": str(WEB_CRAWLER_OUTPUT_DIR),
         "fanqie_sync_tasklogs": str(CHAPTER_SYNC_LOG_DIR),
-        "process_novel_backups": str(PROCESS_BACKUP_DIR),
-        "web_crawler_backups": str(WEB_CRAWLER_BACKUP_DIR),
-        "current_plot_debug": str(CURRENT_PLOT_DEBUG_DIR),
         "chapter_sync_backups": str(CHAPTER_SYNC_BACKUP_DIR),
         "chapter_sync_compare": str(CHAPTER_SYNC_COMPARE_DIR),
         "chapter_sync_history": str(CHAPTER_SYNC_HISTORY_DIR),

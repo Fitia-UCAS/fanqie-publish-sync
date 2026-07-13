@@ -30,11 +30,6 @@ def test_login_waits_for_success_without_default_thirty_second_event(monkeypatch
     assert navigated == ["https://fanqienovel.com/manage"]
 
 
-def test_removed_webnovel_writer_backend_returns_stable_response() -> None:
-    result = WebviewApi().webnovel_writer_list_projects()
-    assert result == {"ok": False, "message": "网文写作后端功能已移除。"}
-
-
 def test_http_and_cli_entrypoints_are_reserved() -> None:
     root = Path(__file__).resolve().parents[1] / "backend" / "interface"
     assert (root / "http" / ".gitkeep").exists()

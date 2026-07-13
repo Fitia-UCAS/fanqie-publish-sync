@@ -14,8 +14,6 @@ class ChapterPublishOptions:
     debug_screenshots: bool = True
     failure_screenshots: bool = True
     git_tracking: bool = True
-    clean_before_run: bool = True
-    headless: bool = False
     auth_state_path: str = ""
     schedule_slots: dict[int, ScheduledPublishSlot] = field(default_factory=dict)
 
@@ -31,8 +29,6 @@ def make_chapter_publish_options(
     debug_screenshots: bool = True,
     failure_screenshots: bool = True,
     git_tracking: bool = True,
-    clean_before_run: bool = True,
-    headless: bool = False,
     auth_state_path: str = "",
     schedule_slots: dict[int, ScheduledPublishSlot] | None = None,
 ) -> ChapterPublishOptions:
@@ -43,8 +39,6 @@ def make_chapter_publish_options(
         debug_screenshots=debug_screenshots,
         failure_screenshots=failure_screenshots,
         git_tracking=git_tracking,
-        clean_before_run=clean_before_run,
-        headless=headless,
         auth_state_path=auth_state_path,
         schedule_slots=dict(schedule_slots or {}),
     )

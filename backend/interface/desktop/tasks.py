@@ -67,7 +67,7 @@ class DesktopTaskCoordinator:
         worker: Callable[[TaskCallbacks], TaskResult | dict[str, Any]],
     ) -> None:
         category = log_category_for_page(page)
-        log_path = None if page in {"auto_publish", "chapter_sync", "web_crawler"} else task_log_file(category)
+        log_path = None if page in {"auto_publish", "chapter_sync"} else task_log_file(category)
         if log_path:
             self._latest_logs[category] = str(log_path)
             self._append(log_path, f"任务：{task_name}\n开始：{datetime.now():%Y-%m-%d %H:%M:%S}\n")
@@ -112,12 +112,4 @@ def log_category_for_page(page: str) -> str:
     return {
         "auto_publish": "auto_publish",
         "chapter_sync": "chapter_sync",
-        "web_crawler": "web_crawler",
-        "character_material": "character_material",
-        "current_plot": "current_plot",
-        "process_novel": "process_novel",
-        "process_novel_batch": "process_novel",
-        "clean_text_ads": "process_novel",
-        "clean_text_breaks": "process_novel",
-        "novel_splitter": "process_novel",
     }.get(normalized, "system")

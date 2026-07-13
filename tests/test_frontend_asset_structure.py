@@ -12,42 +12,27 @@ def test_frontend_core_scripts_are_split_from_app_shell() -> None:
     assert (core_dir / "form_controls.js").exists()
     assert (core_dir / "task_panel.js").exists()
     assert (core_dir / "state_store.js").exists()
-    assert (core_dir / "novel_splitter.js").exists()
-    assert (core_dir / "character_material.js").exists()
-    assert (core_dir / "webnovel_writer.js").exists()
     assert len((FRONTEND_DIR / "assets" / "app.js").read_text(encoding="utf-8").splitlines()) < 460
 
 
 def test_frontend_page_files_use_page_object_names() -> None:
     page_dir = FRONTEND_DIR / "assets" / "pages"
     expected_pages = {
-        "novel_processor",
         "fanqie_publisher",
         "fanqie_syncer",
-        "novel_crawler",
-        "character_material",
-        "current_plot",
-        "webnovel_writer",
     }
     assert {path.stem for path in page_dir.glob("*.js")} == expected_pages
 
 
 def test_frontend_core_scripts_load_before_app_shell() -> None:
-    html = (FRONTEND_DIR / "index.html").read_text(encoding="utf-8")
-    assert html.index("assets/core/page_registry.js") < html.index("assets/app.js")
-    assert html.index("assets/core/state_store.js") < html.index("assets/core/task_panel.js")
-    assert html.index("assets/core/task_panel.js") < html.index("assets/core/novel_splitter.js")
-    assert html.index("assets/core/novel_splitter.js") < html.index("assets/core/character_material.js")
-    assert html.index("assets/core/character_material.js") < html.index("assets/app.js")
+    bundle = (FRONTEND_DIR / "assets" / "bundle.js").read_text(encoding="utf-8")
+    assert bundle.index("assets/core/page_registry.js") < bundle.index("assets/app.js")
+    assert bundle.index("assets/core/state_store.js") < bundle.index("assets/core/task_panel.js")
     for page_file in [
-        "novel_processor.js",
         "fanqie_publisher.js",
         "fanqie_syncer.js",
-        "novel_crawler.js",
-        "character_material.js",
-        "webnovel_writer.js",
     ]:
-        assert html.index(f"assets/pages/{page_file}") < html.index("assets/app.js")
+        assert bundle.index(f"assets/pages/{page_file}") < bundle.index("assets/app.js")
 
 
 def test_header_has_separate_reset_data_and_authorization_buttons() -> None:
@@ -59,49 +44,16 @@ def test_header_has_separate_reset_data_and_authorization_buttons() -> None:
     assert 'reset_app_data' in app_js
     assert 'reset_login' in app_js
 
-def test_novel_processor_uses_console_open_directory_only() -> None:
-    page_js = (FRONTEND_DIR / "assets" / "pages" / "novel_processor.js").read_text(encoding="utf-8")
-    app_js = (FRONTEND_DIR / "assets" / "app.js").read_text(encoding="utf-8")
-    task_panel_js = (FRONTEND_DIR / "assets" / "core" / "task_panel.js").read_text(encoding="utf-8")
-
-    assert "exOpenOutputDir" not in page_js
-    assert "exOpenOutputDir" not in app_js
-    assert 'data-open-output="${this.attr(page)}"' in task_panel_js
-
-
 def test_console_open_directory_uses_feature_data_roots_from_state() -> None:
     task_panel_js = (FRONTEND_DIR / "assets" / "core" / "task_panel.js").read_text(encoding="utf-8")
 
     assert "statePath(key)" in task_panel_js
-    assert "process_novel: 'novel_processor'" in task_panel_js
-    assert "process_novel_batch: 'novel_processor'" in task_panel_js
-    assert "novel_splitter: 'novel_processor'" in task_panel_js
-    assert "clean_text_ads: 'novel_processor'" in task_panel_js
-    assert "clean_text_breaks: 'novel_processor'" in task_panel_js
     assert "auto_publish: 'fanqie_publisher'" in task_panel_js
     assert "chapter_sync: 'fanqie_syncer'" in task_panel_js
-    assert "character_material: 'character_material'" in task_panel_js
-    assert "webnovel_writer: 'webnovel_writer'" in task_panel_js
-    assert "this.statePath('web_crawler_outputs')" in task_panel_js
     assert "this.statePath('auto_publish_logs')" not in task_panel_js
     assert "this.statePath('chapter_sync_logs')" not in task_panel_js
     assert "|| 'novel_process_outputs'" not in task_panel_js
     assert "|| 'novel_crawl_outputs'" not in task_panel_js
-
-
-def test_crawler_page_replaces_html_preview_with_detailed_log() -> None:
-    page_js = (FRONTEND_DIR / "assets" / "pages" / "novel_crawler.js").read_text(encoding="utf-8")
-    app_js = (FRONTEND_DIR / "assets" / "app.js").read_text(encoding="utf-8")
-    config_text = (ROOT_DIR / "config" / "config.json").read_text(encoding="utf-8")
-
-    assert "nsDetailedLog" in page_js
-    assert "详细日志" in page_js
-    assert "detailedLog" in app_js
-    assert "detailedLog" in config_text
-    assert "HTML" + " 预览" not in page_js
-    assert "ns" + "Allow" + "Html" + "Preview" not in page_js
-    assert "allow" + "Html" + "Preview" not in app_js
-    assert "allow" + "Html" + "Preview" not in config_text
 
 
 def test_common_buttons_use_consistent_height_tokens() -> None:
@@ -119,7 +71,7 @@ def test_common_buttons_use_consistent_height_tokens() -> None:
 
 
 def test_frontend_task_state_store_is_loaded_before_task_panel() -> None:
-    html = (FRONTEND_DIR / "index.html").read_text(encoding="utf-8")
+    html = (FRONTEND_DIR / "assets" / "bundle.js").read_text(encoding="utf-8")
     store_js = (FRONTEND_DIR / "assets" / "core" / "state_store.js").read_text(encoding="utf-8")
     task_panel_js = (FRONTEND_DIR / "assets" / "core" / "task_panel.js").read_text(encoding="utf-8")
     app_js = (FRONTEND_DIR / "assets" / "app.js").read_text(encoding="utf-8")
@@ -182,16 +134,12 @@ def test_primary_task_buttons_share_icon_action_markup() -> None:
     page_dir = FRONTEND_DIR / "assets" / "pages"
     publisher_js = (page_dir / "fanqie_publisher.js").read_text(encoding="utf-8")
     syncer_js = (page_dir / "fanqie_syncer.js").read_text(encoding="utf-8")
-    crawler_js = (page_dir / "novel_crawler.js").read_text(encoding="utf-8")
-    processor_js = (page_dir / "novel_processor.js").read_text(encoding="utf-8")
 
-    for page_js in [publisher_js, syncer_js, crawler_js, processor_js]:
+    for page_js in [publisher_js, syncer_js]:
         assert "big-action primary-action" in page_js
 
     assert "primary-btn full-btn start-btn" not in publisher_js
-    assert "primary-btn full-btn" not in crawler_js
     assert "<span>↑</span><div><b>启动发布</b></div>" in publisher_js
-    assert "<span>↓</span><div><b>开始拉取</b></div>" in crawler_js
 
 
 def test_action_buttons_use_exact_shared_control_height() -> None:
@@ -234,11 +182,3 @@ def test_control_fonts_share_one_weight_and_size_token() -> None:
     assert "--control-font-weight: 900" in css
     assert "font-weight: var(--control-font-weight)" in css
     assert "--control-font-weight: var(--control-font-weight)" not in css
-
-
-def test_character_material_console_is_status_only_in_ui() -> None:
-    app_js = (FRONTEND_DIR / "assets" / "app.js").read_text(encoding="utf-8")
-
-    assert "'character_material'" in app_js
-    assert "loglessPages:" in app_js
-    assert "'character_material'" in app_js.split("loglessPages:", 1)[1].split("]", 1)[0]

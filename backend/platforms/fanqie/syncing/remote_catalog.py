@@ -13,7 +13,7 @@ def collect_remote_chapter_numbers(
     chapter_manage_url: str = DEFAULT_CHAPTER_MANAGE_URL,
     log: Callable[[str], None] = print,
 ) -> list[int]:
-    p, context, page = make_context(headless=False)
+    p, context, page = make_context()
     try:
         goto_chapter_manage(page, chapter_manage_url)
         ensure_logged_in(page, chapter_manage_url, log=log)

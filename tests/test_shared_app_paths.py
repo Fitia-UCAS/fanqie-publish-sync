@@ -6,12 +6,8 @@ from backend.runtime.paths import (
     CONFIG_DIR,
     CONFIG_FILE,
     LOG_CATEGORIES,
-    PROCESS_NOVEL_DIR,
-    PROCESS_OUTPUT_DIR,
     PUBLISH_DIR,
     ROOT_DIR,
-    WEB_CRAWLER_DIR,
-    WEB_CRAWLER_OUTPUT_DIR,
     get_state_paths,
     latest_log_file,
     task_log_file,
@@ -46,10 +42,6 @@ def test_backend_uses_new_architecture_roots() -> None:
 
 def test_open_directory_aliases_stay_inside_feature_data_dirs() -> None:
     paths = get_state_paths()
-    assert paths["novel_processor"] == str(PROCESS_NOVEL_DIR)
-    assert paths["novel_crawler"] == str(WEB_CRAWLER_DIR)
     assert paths["fanqie_publisher"] == str(PUBLISH_DIR)
     assert paths["fanqie_syncer"] == str(CHAPTER_SYNC_DIR)
-    assert paths["novel_process_outputs"] == str(PROCESS_OUTPUT_DIR)
-    assert paths["novel_crawl_outputs"] == str(WEB_CRAWLER_OUTPUT_DIR)
     assert paths["fanqie_sync_tasklogs"] == str(CHAPTER_SYNC_LOG_DIR)

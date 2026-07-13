@@ -4,7 +4,6 @@ from dataclasses import replace
 from pathlib import Path
 from typing import Callable
 
-from backend.platforms.fanqie.publishing.tracker import clean_previous_publish_artifacts
 from backend.platforms.fanqie.publishing.local_source import load_local_chapters_by_number
 from backend.runtime.errors import ErrorStage
 from backend.features.publishing.models import ChapterPublishResult
@@ -27,8 +26,6 @@ def run_multi_chapter_publish(
     debug_screenshots: bool = True,
     failure_screenshots: bool = True,
     git_tracking: bool = True,
-    clean_before_run: bool = True,
-    headless: bool = False,
     auth_state_path: str = "",
     manual_schedule_enabled: bool = False,
     schedule_start_date: str = "",
@@ -47,8 +44,6 @@ def run_multi_chapter_publish(
         debug_screenshots=debug_screenshots,
         failure_screenshots=failure_screenshots,
         git_tracking=git_tracking,
-        clean_before_run=clean_before_run,
-        headless=headless,
         auth_state_path=auth_state_path,
         schedule_slots=build_schedule_slots(
             chapters,
@@ -73,10 +68,6 @@ def run_multi_chapter_publish_with_options(
     pause_requested: Callable[[], bool] | None = None,
 ) -> list[ChapterPublishResult]:
     local_chapters = load_local_chapters_by_number(novel_file, chapters)
-    if options.clean_before_run:
-        clean_previous_publish_artifacts(log=log)
-    else:
-        log("启动清理旧番茄发布数据已关闭。")
     if options.debug_screenshots:
         log(f"番茄发布调试截图已开启：{PUBLISH_DEBUG_DIR}")
     else:
@@ -90,7 +81,7 @@ def run_multi_chapter_publish_with_options(
     if schedule_desc:
         log(schedule_desc)
 
-    p, context, page = make_context(headless=options.headless, debug_category="auto_publish", debug_enabled=options.debug_screenshots, failure_debug_enabled=options.failure_screenshots, auth_state_path=options.auth_state_path)
+    p, context, page = make_context(debug_category="auto_publish", debug_enabled=options.debug_screenshots, failure_debug_enabled=options.failure_screenshots, auth_state_path=options.auth_state_path)
     results: list[ChapterPublishResult] = []
     try:
         if not chapters:
@@ -98,11 +89,11 @@ def run_multi_chapter_publish_with_options(
         per_chapter_options = replace(options, verify_after_publish=False) if options.verify_after_publish else options
         for index, chapter_no in enumerate(chapters, start=1):
             if _stop_requested(stop_requested):
-                log("已停止发布。")
+                log("已终止发布。")
                 break
             _wait_while_paused(pause_requested=pause_requested, stop_requested=stop_requested, log=log, label="发布")
             if _stop_requested(stop_requested):
-                log("已停止发布。")
+                log("已终止发布。")
                 break
             log(f"后台批量处理：第 {chapter_no} 章（{index}/{len(chapters)}）")
             try:
@@ -214,6 +205,6 @@ def _wait_while_paused(
         if _stop_requested(stop_requested):
             return
         if not announced:
-            log(f"{label}已暂停，点击继续后会处理下一章。")
+            log(f"{label}已暂缓，点击继续后会处理下一章。")
             announced = True
         time.sleep(0.5)

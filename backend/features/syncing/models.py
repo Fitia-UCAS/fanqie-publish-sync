@@ -29,8 +29,6 @@ class ChapterSyncOptions:
     debug_screenshots: bool = True
     failure_screenshots: bool = True
     git_tracking: bool = True
-    clean_before_run: bool = True
-    headless: bool = False
     auth_state_path: str = ""
     schedule_slots: dict[int, ScheduledPublishSlot] = field(default_factory=dict)
 

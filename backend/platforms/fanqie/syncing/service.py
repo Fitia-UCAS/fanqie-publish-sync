@@ -24,8 +24,6 @@ def run_chapter_sync(
     debug_screenshots: bool = True,
     failure_screenshots: bool = True,
     git_tracking: bool = True,
-    clean_before_run: bool = True,
-    headless: bool = False,
     auth_state_path: str = "",
     manual_schedule_enabled: bool = False,
     schedule_start_date: str = "",
@@ -44,11 +42,9 @@ def run_chapter_sync(
         debug_screenshots=debug_screenshots,
         failure_screenshots=failure_screenshots,
         git_tracking=git_tracking,
-        clean_before_run=clean_before_run,
-        headless=headless,
         auth_state_path=auth_state_path,
     )
-    p, context, page = make_context(headless=headless, debug_category="chapter_sync", debug_enabled=debug_screenshots, failure_debug_enabled=failure_screenshots, auth_state_path=auth_state_path)
+    p, context, page = make_context(debug_category="chapter_sync", debug_enabled=debug_screenshots, failure_debug_enabled=failure_screenshots, auth_state_path=auth_state_path)
     try:
         return run_single_chapter_sync(page=page, novel_file=novel_file, chapter_no=chapter_no, options=options, log=log)
     finally:

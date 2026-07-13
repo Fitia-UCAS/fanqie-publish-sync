@@ -16,16 +16,13 @@ from backend.runtime.paths import (
     APP_SYSTEM_DIR,
     BROWSER_DATA_DIR,
     CHAPTER_SYNC_DIR,
-    CHARACTER_MATERIAL_DIR,
     DATA_DIR,
     FANQIE_AUTH_STATE_FILE,
     FANQIE_ACCOUNTS_FILE,
     FANQIE_ACCOUNT_STATES_DIR,
     LEGACY_COMMON_DIR,
-    PROCESS_NOVEL_DIR,
     PUBLISH_DIR,
     ROOT_DIR,
-    WEB_CRAWLER_DIR,
     ensure_data_directories,
 )
 
@@ -34,9 +31,6 @@ LOGGER = get_logger(__name__)
 
 RUNTIME_DATA_DIRS: tuple[Path, ...] = (
     APP_SYSTEM_DIR,
-    PROCESS_NOVEL_DIR,
-    WEB_CRAWLER_DIR,
-    CHARACTER_MATERIAL_DIR,
     PUBLISH_DIR,
     CHAPTER_SYNC_DIR,
     LEGACY_COMMON_DIR,
@@ -241,5 +235,3 @@ def _same_path(left: Path, right: Path) -> bool:
         return left.resolve() == right.resolve()
     except Exception:
         return str(left) == str(right)
-
-

@@ -18,17 +18,8 @@ SCRIPTS = [
     "assets/core/form_controls.js",
     "assets/core/state_store.js",
     "assets/core/task_panel.js",
-    "assets/core/novel_splitter.js",
-    "assets/core/character_material.js",
-    "assets/core/current_plot.js",
-    "assets/core/webnovel_writer.js",
-    "assets/pages/novel_processor.js",
     "assets/pages/fanqie_syncer.js",
     "assets/pages/fanqie_publisher.js",
-    "assets/pages/novel_crawler.js",
-    "assets/pages/character_material.js",
-    "assets/pages/current_plot.js",
-    "assets/pages/webnovel_writer.js",
     "assets/app.js",
 ]
 

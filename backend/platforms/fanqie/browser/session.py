@@ -57,7 +57,7 @@ def maximize_page_window(page: Page) -> None:
         pass
 
 
-def make_context(headless: bool = False, *, debug_category: str = "chapter_sync", debug_enabled: bool | None = None, failure_debug_enabled: bool | None = None, auth_state_path: str | Path | None = None):
+def make_context(*, debug_category: str = "chapter_sync", debug_enabled: bool | None = None, failure_debug_enabled: bool | None = None, auth_state_path: str | Path | None = None):
     try:
         from playwright.sync_api import sync_playwright
     except Exception as exc:
@@ -66,18 +66,13 @@ def make_context(headless: bool = False, *, debug_category: str = "chapter_sync"
     p = sync_playwright().start()
     BROWSER_DATA_DIR.mkdir(parents=True, exist_ok=True)
     launch_kwargs: dict[str, Any] = {
-        "headless": headless,
         "args": [
             "--disable-blink-features=AutomationControlled",
             "--start-maximized",
         ],
     }
 
-    context_kwargs: dict[str, Any] = {}
-    if headless:
-        context_kwargs["viewport"] = VIEWPORT
-    else:
-        context_kwargs["no_viewport"] = True
+    context_kwargs: dict[str, Any] = {"no_viewport": True}
     auth_state_file = resolve_auth_state_file(auth_state_path)
     if auth_state_file.exists():
         context_kwargs["storage_state"] = str(auth_state_file)
@@ -98,12 +93,11 @@ def make_context(headless: bool = False, *, debug_category: str = "chapter_sync"
     if failure_debug_enabled is not None:
         _CONTEXT_FAILURE_DEBUG_ENABLED[id(context)] = bool(failure_debug_enabled)
     page = context.pages[0] if context.pages else context.new_page()
-    if not headless:
-        maximize_page_window(page)
-        try:
-            page.wait_for_timeout(300)
-        except Exception:
-            pass
+    maximize_page_window(page)
+    try:
+        page.wait_for_timeout(300)
+    except Exception:
+        pass
     return p, context, page
 
 

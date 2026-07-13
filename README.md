@@ -172,21 +172,12 @@ Thanks to [番茄小说全自动发文机器人](https://github.com/hchcx/fanqie
 ```txt
 FANQIE PUBLISH & SYNC ASSISTANT | 番茄发布
 FANQIE PUBLISH & SYNC ASSISTANT | 番茄同步
-FANQIE PUBLISH & SYNC ASSISTANT | 小说处理
-FANQIE PUBLISH & SYNC ASSISTANT | 网页抓取
-FANQIE PUBLISH & SYNC ASSISTANT | 角色素材
-FANQIE PUBLISH & SYNC ASSISTANT | 当前剧情
 ```
 
 至于更具体一点点的？
 
 * **番茄发布**：把本地章节送进番茄后台，少点一点是一点。
 * **番茄同步**：本地和网页章节对一对，不一致就揪出来。
-* **小说处理**：整理 TXT、识别章节、格式化文本、按章节/章节数/大小/行数分割小说。
-* **网页抓取**：抓章节、存 TXT、顺便清理一下乱七八糟的东西。
-* **角色素材**：整理角色资料，把人物设定转成更方便复用的提示词素材。
-* **当前剧情**：管理当前剧情上下文，让下一章能接得上前文正在发生的事。
-* **网文写作**：管理小说项目目录、小说 TXT、设定文件，并执行大纲、蓝图、写章、审查和状态回写流程。
 
 就这样。
 

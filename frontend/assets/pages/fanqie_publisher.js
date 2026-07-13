@@ -23,11 +23,9 @@ window.renderFanqiePublisherPage = function renderFanqiePublisherPage(app) {
               <div class="option-grid two-col fanqie-option-grid">
                 <label><input type="checkbox" id="apUseAi" ${cfg.useAi ? 'checked' : ''}/> 使用 AI</label>
                 <label><input type="checkbox" id="apVerifyAfterPublish" ${cfg.verifyAfterPublish !== false ? 'checked' : ''}/> 列表校验</label>
-                <label><input type="checkbox" id="apHeadless" ${cfg.headless ? 'checked' : ''}/> 后台无头</label>
                 <label><input type="checkbox" id="apDebugScreenshots" ${cfg.debugScreenshots !== false ? 'checked' : ''}/> 步骤截图</label>
                 <label><input type="checkbox" id="apFailureScreenshots" ${cfg.failureScreenshots !== false ? 'checked' : ''}/> 失败截图</label>
                 <label><input type="checkbox" id="apGitTracking" ${cfg.gitTracking !== false ? 'checked' : ''}/> Git追踪</label>
-                <label><input type="checkbox" id="apCleanBeforeRun" ${cfg.cleanBeforeRun !== false ? 'checked' : ''}/> 启动清理</label>
                 <label><input type="checkbox" id="apManualSchedule" ${cfg.manualSchedule ? 'checked' : ''}/> 手动定时</label>
               </div>
               <div class="manual-schedule-fields ${cfg.manualSchedule ? '' : 'hidden'}" id="apManualScheduleFields">
@@ -43,11 +41,11 @@ window.renderFanqiePublisherPage = function renderFanqiePublisherPage(app) {
               <div class="action-stack fanqie-actions">
                 <div class="action-row two-actions">
                   <button class="big-action primary-action" data-auto-op="publish"><span>↑</span><div><b>启动发布</b></div></button>
-                  <button class="big-action primary-action" id="apStop" type="button"><span>×</span><div><b>停止发布</b></div></button>
+                  <button class="big-action primary-action" id="apPause" type="button"><span>⏸</span><div><b>暂缓发布</b></div></button>
                 </div>
                 <div class="action-row two-actions">
-                  <button class="big-action primary-action" id="apPause" type="button"><span>⏸</span><div><b>暂停</b></div></button>
-                  <button class="big-action primary-action" id="apResume" type="button"><span>▶</span><div><b>继续</b></div></button>
+                  <button class="big-action primary-action" id="apResume" type="button"><span>▶</span><div><b>继续发布</b></div></button>
+                  <button class="big-action primary-action" id="apStop" type="button"><span>×</span><div><b>终止发布</b></div></button>
                 </div>
               </div>
             </div>

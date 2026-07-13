@@ -41,8 +41,6 @@ class PublishChapters:
             debug_screenshots=bool(payload.get("debugScreenshots", True)),
             failure_screenshots=bool(payload.get("failureScreenshots", True)),
             git_tracking=bool(payload.get("gitTracking", True)),
-            clean_before_run=bool(payload.get("cleanBeforeRun", True)),
-            headless=bool(payload.get("headless", False)),
             auth_state_path=str(payload.get("authStatePath") or ""),
             manual_schedule_enabled=bool(payload.get("manualSchedule", False)),
             schedule_start_date=str(payload.get("scheduleStartDate") or ""),
@@ -57,7 +55,7 @@ class PublishChapters:
         ok_count = sum(1 for item in results if getattr(item, "ok", False))
         task_log.finish(ok_count, len(results))
         stopped = callbacks.stop_requested()
-        message = f"已停止发布：成功 {ok_count}/{len(chapters)}。" if stopped else f"任务结束：成功 {ok_count}/{len(chapters)}。"
+        message = f"已终止发布：成功 {ok_count}/{len(chapters)}。" if stopped else f"任务结束：成功 {ok_count}/{len(chapters)}。"
         return TaskResult(
             (not stopped) and ok_count == len(chapters),
             message,
