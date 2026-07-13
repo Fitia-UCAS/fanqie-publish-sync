@@ -34,13 +34,31 @@ def remove_build_outputs() -> None:
 def write_spec() -> Path:
     spec_path = ROOT_DIR / SPEC_NAME
     spec_content = """
+import sys
+from pathlib import Path
 
 APP_NAME_FROM_SCRIPT = "__APP_NAME__"
+CONDA_LIBRARY_BIN = Path(sys.prefix) / 'Library' / 'bin'
+RUNTIME_DLL_NAMES = [
+    'ffi.dll',
+    'libbz2.dll',
+    'libcrypto-3-x64.dll',
+    'libexpat.dll',
+    'liblzma.dll',
+    'libssl-3-x64.dll',
+    'tcl86t.dll',
+    'tk86t.dll',
+]
+RUNTIME_BINARIES = [
+    (str(CONDA_LIBRARY_BIN / name), '.')
+    for name in RUNTIME_DLL_NAMES
+    if (CONDA_LIBRARY_BIN / name).is_file()
+]
 
 a = Analysis(
     ['main.py'],
     pathex=['.'],
-    binaries=[],
+    binaries=RUNTIME_BINARIES,
     datas=[
         ('frontend', 'frontend'),
         ('logo.png', '.'),
