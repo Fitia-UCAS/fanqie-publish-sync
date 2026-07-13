@@ -193,9 +193,7 @@ def _debug_dedupe_enabled(category: str) -> bool:
     return True
 
 
-def _page_state_fingerprint(page: Page, screenshot_bytes: bytes) -> str:
-
-
+def _page_state_fingerprint(page: Page) -> str | None:
     try:
         state = page.evaluate(
             """() => {
@@ -209,7 +207,7 @@ def _page_state_fingerprint(page: Page, screenshot_bytes: bytes) -> str:
             return hashlib.sha256(normalized.encode("utf-8", errors="ignore")).hexdigest()
     except Exception:
         pass
-    return hashlib.sha256(screenshot_bytes).hexdigest()
+    return None
 
 
 def save_debug(page: Page, name: str, *, category: str | None = None, force: bool = False) -> None:
@@ -238,20 +236,27 @@ def _failure_debug_enabled(page: Page) -> bool:
 
 def _write_debug_image(page: Page, name: str, *, category: str, force: bool = False) -> None:
     directory = _debug_dir(category)
-    directory.mkdir(parents=True, exist_ok=True)
+
+    seen: set[str] | None = None
+    fingerprint: str | None = None
+    if not force and _debug_dedupe_enabled(category):
+        try:
+            context_id = id(page.context)
+        except Exception:
+            context_id = 0
+        seen = _CONTEXT_DEBUG_FINGERPRINTS.setdefault(context_id, set())
+        fingerprint = _page_state_fingerprint(page)
+        if fingerprint is not None and fingerprint in seen:
+            return
 
     try:
         screenshot_bytes = page.screenshot(full_page=True)
     except Exception:
         return
 
-    if not force and _debug_dedupe_enabled(category):
-        try:
-            context_id = id(page.context)
-        except Exception:
-            context_id = 0
-        fingerprint = _page_state_fingerprint(page, screenshot_bytes)
-        seen = _CONTEXT_DEBUG_FINGERPRINTS.setdefault(context_id, set())
+    if seen is not None:
+        if fingerprint is None:
+            fingerprint = hashlib.sha256(screenshot_bytes).hexdigest()
         if fingerprint in seen:
             return
         seen.add(fingerprint)
@@ -262,6 +267,7 @@ def _write_debug_image(page: Page, name: str, *, category: str, force: bool = Fa
     stem = f"{ts}_{ms:03d}_{seq:04d}_{_safe_debug_name(name)}"
     png_path = directory / f"{stem}.png"
     try:
+        directory.mkdir(parents=True, exist_ok=True)
         png_path.write_bytes(screenshot_bytes)
     except Exception:
         pass
