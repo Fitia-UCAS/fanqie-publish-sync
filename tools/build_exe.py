@@ -33,7 +33,7 @@ def remove_build_outputs() -> None:
 
 def write_spec() -> Path:
     spec_path = ROOT_DIR / SPEC_NAME
-    spec_content = """# -*- mode: python ; coding: utf-8 -*-
+    spec_content = """
 
 APP_NAME_FROM_SCRIPT = "__APP_NAME__"
 

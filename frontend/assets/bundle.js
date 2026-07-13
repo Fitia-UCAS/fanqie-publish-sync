@@ -1,7 +1,4 @@
-// bundle.js —— 由 tools/bundle_js.py 自动生成，请勿手动编辑
 
-
-// --- assets/core/page_registry.js ---
 (function () {
   window.NovelConstants = {
     pageTitles: {
@@ -13,7 +10,6 @@
 })();
 
 
-// --- assets/core/form_controls.js ---
 (function () {
   window.NovelUiMethods = {
     escape(value) {
@@ -51,7 +47,6 @@
 })();
 
 
-// --- assets/core/state_store.js ---
 (function () {
   function initialState(page) {
     return {
@@ -151,7 +146,6 @@
 })();
 
 
-// --- assets/core/task_panel.js ---
 (function () {
   window.NovelTaskPanelMethods = {
     renderTerminalPanel(page) {
@@ -641,7 +635,6 @@
 })();
 
 
-// --- assets/pages/fanqie_syncer.js ---
 window.renderFanqieSyncerPage = function renderFanqieSyncerPage(app) {
   const cfg = app.state.config.chapter_sync || {};
   return `
@@ -710,7 +703,6 @@ window.renderFanqieSyncerPage = function renderFanqieSyncerPage(app) {
 };
 
 
-// --- assets/pages/fanqie_publisher.js ---
 window.renderFanqiePublisherPage = function renderFanqiePublisherPage(app) {
   const cfg = app.state.config.auto_publish || {};
   return `
@@ -771,7 +763,6 @@ window.renderFanqiePublisherPage = function renderFanqiePublisherPage(app) {
 };
 
 
-// --- assets/app.js ---
 (function () {
   const { pageTitles, defaultPage } = window.NovelConstants;
 

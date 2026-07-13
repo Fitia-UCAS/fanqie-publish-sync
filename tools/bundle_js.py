@@ -1,8 +1,3 @@
-"""将 frontend JS 源文件拼接为单个 bundle.js。
-
-加载顺序必须与原始 index.html 中的 <script> 标签顺序一致。
-"""
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -11,7 +6,7 @@ ROOT_DIR = Path(__file__).resolve().parents[1]
 ASSETS_DIR = ROOT_DIR / "frontend" / "assets"
 BUNDLE_OUT = ASSETS_DIR / "bundle.js"
 
-HEADER = "// bundle.js —— 由 tools/bundle_js.py 自动生成，请勿手动编辑\n\n"
+HEADER = ""
 
 SCRIPTS = [
     "assets/core/page_registry.js",
@@ -36,7 +31,7 @@ def bundle() -> None:
         content = path.read_text(encoding="utf-8")
         total_bytes += len(content.encode("utf-8"))
 
-        parts.append(f"\n// --- {src} ---\n")
+        parts.append("\n")
         parts.append(content)
         parts.append("\n")
 

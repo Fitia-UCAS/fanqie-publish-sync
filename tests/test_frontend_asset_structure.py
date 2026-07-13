@@ -26,13 +26,11 @@ def test_frontend_page_files_use_page_object_names() -> None:
 
 def test_frontend_core_scripts_load_before_app_shell() -> None:
     bundle = (FRONTEND_DIR / "assets" / "bundle.js").read_text(encoding="utf-8")
-    assert bundle.index("assets/core/page_registry.js") < bundle.index("assets/app.js")
-    assert bundle.index("assets/core/state_store.js") < bundle.index("assets/core/task_panel.js")
-    for page_file in [
-        "fanqie_publisher.js",
-        "fanqie_syncer.js",
-    ]:
-        assert bundle.index(f"assets/pages/{page_file}") < bundle.index("assets/app.js")
+    app_start = bundle.index("const { pageTitles, defaultPage } = window.NovelConstants")
+    assert bundle.index("window.NovelConstants") < app_start
+    assert bundle.index("window.NovelTaskStateStore") < bundle.index("window.NovelTaskPanelMethods")
+    assert bundle.index("window.renderFanqiePublisherPage") < app_start
+    assert bundle.index("window.renderFanqieSyncerPage") < app_start
 
 
 def test_header_has_separate_reset_data_and_authorization_buttons() -> None:
@@ -76,7 +74,7 @@ def test_frontend_task_state_store_is_loaded_before_task_panel() -> None:
     task_panel_js = (FRONTEND_DIR / "assets" / "core" / "task_panel.js").read_text(encoding="utf-8")
     app_js = (FRONTEND_DIR / "assets" / "app.js").read_text(encoding="utf-8")
 
-    assert html.index("assets/core/state_store.js") < html.index("assets/core/task_panel.js")
+    assert html.index("window.NovelTaskStateStore") < html.index("window.NovelTaskPanelMethods")
     assert "NovelTaskStateStore" in store_js
     assert "applyTaskEvent(event)" in task_panel_js
     assert "terminal-metrics" not in task_panel_js
