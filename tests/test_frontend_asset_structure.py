@@ -114,13 +114,16 @@ def test_panels_use_flat_shared_surface_style() -> None:
     assert "status-panel .terminal-log" not in css
 
 
-def test_output_panel_uses_status_message_without_metric_bar() -> None:
+def test_output_panel_uses_progress_and_structured_log_without_dynamic_status_bar() -> None:
     css = (FRONTEND_DIR / "assets" / "styles.css").read_text(encoding="utf-8")
     task_panel_js = (FRONTEND_DIR / "assets" / "core" / "task_panel.js").read_text(encoding="utf-8")
 
     assert "--output-panel-height" in css
     assert "--settings-panel-height" in css
-    assert "terminal-status info" in task_panel_js
+    assert "terminal-status" not in task_panel_js
+    assert "运行日志" in task_panel_js
+    assert "log-label" in task_panel_js
+    assert "log-repeat" in task_panel_js
     assert "terminal-metrics" not in css
     assert "terminal-metrics" not in task_panel_js
     assert "阶段：等待" not in task_panel_js

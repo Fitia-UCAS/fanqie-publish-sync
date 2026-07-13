@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from pathlib import Path
+import json
+import shutil
 from typing import Any
 
 from backend.bootstrap import ApplicationServices, create_application_services
@@ -19,6 +21,9 @@ from backend.interface.desktop.tasks import DesktopTaskCoordinator, log_category
 from backend.runtime.data_reset import reset_app_data, reset_login_state
 from backend.runtime.logging import setup_logging
 from backend.runtime.paths import FANQIE_AUTH_STATE_FILE, LOG_FILE, get_state_paths, latest_log_file
+from backend.runtime.defaults import DEFAULT_CHAPTER_MANAGE_URL
+from backend.platforms.fanqie.actions.interactions import ensure_logged_in, goto_chapter_manage
+from backend.platforms.fanqie.browser.session import close_context, make_context, resolve_auth_state_file
 
 
 def _config_value(config: dict[str, Any], dotted_path: str) -> str:
@@ -93,9 +98,50 @@ class WebviewApi:
     def check_login_state(self) -> bool:
         return FANQIE_AUTH_STATE_FILE.exists()
 
-    def do_login(self) -> bool:
-        self._bridge.emit_log("auto_publish", "启动发布或同步后，请在自动打开的浏览器中完成登录。登录成功后会保存账号状态。", "info")
-        return True
+    def do_login(self) -> dict[str, Any]:
+        p = context = None
+        succeeded = False
+        try:
+            chapter_manage_url = (
+                _config_value(self._config, "auto_publish.chapterManageUrl")
+                or _config_value(self._config, "chapter_sync.chapterManageUrl")
+                or DEFAULT_CHAPTER_MANAGE_URL
+            )
+            if not chapter_manage_url.startswith("http"):
+                return {"ok": False, "message": "请先在发布页或同步页填写章节管理 URL。"}
+            p, context, page = make_context(debug_category="auto_publish", debug_enabled=False, failure_debug_enabled=False)
+            goto_chapter_manage(page, chapter_manage_url)
+            ensure_logged_in(
+                page,
+                chapter_manage_url,
+                log=lambda message: self._bridge.emit_log("auto_publish", message),
+                wait_for_login=True,
+            )
+            succeeded = True
+            return {"ok": True, "message": "番茄账号登录成功。"}
+        except Exception as exc:
+            return {"ok": False, "message": f"登录未完成：{exc}"}
+        finally:
+            if p is not None and context is not None:
+                close_context(p, context, save_state=succeeded)
+
+    def import_login_state(self) -> dict[str, Any]:
+        selected = open_login_state_dialog(self._window, current_path=str(FANQIE_AUTH_STATE_FILE))
+        if not selected:
+            return {"ok": False, "message": "未选择登录状态。"}
+        source = resolve_auth_state_file(selected)
+        if not source.is_file():
+            return {"ok": False, "message": "所选位置没有找到 state.json。"}
+        try:
+            data = json.loads(source.read_text(encoding="utf-8"))
+            if not isinstance(data, dict):
+                raise ValueError("登录状态格式无效")
+            FANQIE_AUTH_STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+            if source.resolve() != FANQIE_AUTH_STATE_FILE.resolve():
+                shutil.copy2(source, FANQIE_AUTH_STATE_FILE)
+            return {"ok": True, "message": "登录状态已导入。"}
+        except Exception as exc:
+            return {"ok": False, "message": f"导入失败：{exc}"}
 
     def reset_login(self) -> dict[str, Any]:
         result = reset_login_state()
@@ -115,12 +161,18 @@ class WebviewApi:
         return self._list_chapters(file_path)
 
     def auto_publish_run(self, payload: dict[str, Any]) -> bool:
+        if not FANQIE_AUTH_STATE_FILE.is_file():
+            self._bridge.emit_log("auto_publish", "请先通过账号登录入口完成番茄登录。", "warning")
+            return False
         return self._tasks.start("auto_publish", "auto_publish", lambda callbacks: self._services.publishing.execute(payload, callbacks))
 
     def chapter_sync_list_chapters(self, file_path: str) -> dict[str, Any]:
         return self._list_chapters(file_path)
 
     def chapter_sync_run(self, payload: dict[str, Any]) -> bool:
+        if not FANQIE_AUTH_STATE_FILE.is_file():
+            self._bridge.emit_log("chapter_sync", "请先通过账号登录入口完成番茄登录。", "warning")
+            return False
         return self._tasks.start("chapter_sync", "chapter_sync", lambda callbacks: self._services.syncing.execute(payload, callbacks))
 
     def auto_publish_stop(self) -> bool:

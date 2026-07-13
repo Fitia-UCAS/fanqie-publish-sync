@@ -11,7 +11,7 @@
       return `<div class="terminal-card ${statusOnly ? 'status-panel' : ''} ${logless ? 'logless-panel' : ''}">
         <div class="terminal-head">
           <div class="terminal-dots"><i></i><i></i><i></i></div>
-          <b>任务进度</b>
+          <b>运行日志</b>
           <div class="terminal-actions">
             ${actions}
           </div>
@@ -21,7 +21,6 @@
           <div class="progress" id="${this.attr(page)}ProgressTrack"><i id="${this.attr(page)}ProgressBar"></i></div>
           <span id="${this.attr(page)}ProgressPercent">0%</span>
         </div>
-        <div class="terminal-status info" id="${this.attr(page)}Status">等待执行</div>
         ${logless ? '' : `<div class="terminal-log" id="${this.attr(page)}Log"></div>`}
       </div>`;
     },
@@ -76,12 +75,6 @@
       if (!text) return;
       this.taskStatus[targetPage] = { message: text, level };
       this.renderTaskMetrics(targetPage);
-      const node = document.getElementById(`${targetPage}Status`);
-      if (node) {
-        const cssLevel = level === 'warning' ? 'warn' : level;
-        node.className = `terminal-status ${cssLevel}`;
-        node.textContent = text;
-      }
       if (targetPage === this.currentPage) {
         const headerLevel = level === 'error' ? 'error' : (level === 'success' ? 'ready' : 'busy');
         const headerText = level === 'error' ? '任务失败' : (level === 'success' ? '任务完成' : '任务运行中');
@@ -93,19 +86,17 @@
     conciseTaskMessage(message, page = '') {
       const text = String(message || '').trim();
       if (!text) return '';
-      if (text.startsWith('详细日志：')) return '';
-      if (text.startsWith('开始：')) return '';
-      if (text.startsWith('准备执行：')) {
-        return text.replace(/^准备执行：/, '');
-      }
-      return text;
+      if (/https?:\/\//i.test(text)) return text;
+      return text
+        .replace(/([\u3400-\u9fff])([A-Za-z0-9])/g, '$1 $2')
+        .replace(/([A-Za-z0-9])([\u3400-\u9fff])/g, '$1 $2')
+        .replace(/[ \t]{2,}/g, ' ');
     },
 
     async copyOutput(page) {
       const resultText = String(this.resultTexts?.[page] || '').trim();
       const logText = (document.getElementById(`${page}Log`)?.innerText || '').trim();
-      const statusText = (document.getElementById(`${page}Status`)?.innerText || '').trim();
-      const text = resultText || logText || statusText;
+      const text = resultText || logText;
       if (!text) return this.toast('暂无可复制内容。', 'warning', page);
       try {
         await navigator.clipboard.writeText(text);
@@ -130,42 +121,109 @@
       if (progress) this.setProgress(targetPage, progress.current, progress.total);
       this.renderTaskMetrics(targetPage, state);
       if (event && event.eventType === 'progress') return;
-      const text = event && event.displayMessage ? event.displayMessage : (event && event.label && event.message ? `${event.label}：${event.message}` : event && event.message);
-      this.appendLog(targetPage, text, event && event.level || 'info');
+      const text = event && typeof event.message === 'string' ? event.message : (event && event.displayMessage ? event.displayMessage : '');
+      this.appendLog(targetPage, text, event && event.level || 'info', event || {});
     },
     renderTaskMetrics(page, state = null) {
       const targetPage = this.logAliases[page] || page;
       if (state && this.taskStore) this.taskStore.states[targetPage] = state;
     },
-    appendLog(page, message, level = 'info') {
+    shouldUpdateTaskStatus(message, level, event = {}) {
+      if (level === 'error' || level === 'warn' || level === 'warning') return true;
+      if (['stage', 'completed', 'stopped', 'failed', 'error'].includes(String(event.eventType || ''))) return true;
+      const text = String(message || '');
+      return /^第\s*\d+\s*章（\d+\/\d+）：处理中/.test(text) || text.startsWith('正在最终校验');
+    },
+    logItemLabel(level, event = {}) {
+      const label = String(event.label || '').trim();
+      const labels = {
+        '任务': '任务名称',
+        '操作': '操作类型',
+        '范围': '章节范围',
+        '开始': '开始时间',
+        '阶段': '当前阶段',
+        '进度': '任务进度',
+        '信息': '运行信息',
+        '成功': '执行成功',
+        '完成': '任务完成',
+        '失败': '执行失败',
+        '错误': '发生错误',
+        '注意': '注意事项',
+        '停止': '任务停止',
+        '抓取': '网页抓取',
+        '写入': '内容写入',
+        '限流': '访问限流',
+        '补抓': '重新抓取',
+        '目录': '章节目录',
+        '检测': '内容检测',
+        '缺章': '缺失章节',
+        '本地': '本地章节',
+        '番茄': '平台章节',
+        '标题': '章节标题',
+        '异常': '发生异常',
+        '结束': '任务结束',
+        'Diff': '差异内容',
+        'Git': '版本追踪',
+        '仅检查': '仅做检查',
+      };
+      if (label && label !== '信息') return labels[label] || label.slice(0, 4);
+      if (level === 'success') return '执行成功';
+      if (level === 'error') return '执行失败';
+      if (level === 'warn' || level === 'warning') return '注意事项';
+      return '运行信息';
+    },
+    logItemTime(event = {}) {
+      const value = event.timestamp ? new Date(event.timestamp) : new Date();
+      if (Number.isNaN(value.getTime())) return new Date().toLocaleTimeString([], { hour12: false });
+      return value.toLocaleTimeString([], { hour12: false });
+    },
+    createLogLine(item) {
+      const line = document.createElement('div');
+      line.className = `log-line ${item.level}`;
+      const time = document.createElement('time');
+      time.textContent = item.time;
+      const label = document.createElement('span');
+      label.className = 'log-label';
+      label.textContent = item.label;
+      const message = document.createElement('span');
+      message.className = 'log-message';
+      message.textContent = item.message;
+      const repeat = document.createElement('span');
+      repeat.className = 'log-repeat';
+      repeat.textContent = item.count > 1 ? `×${item.count}` : '';
+      line.append(time, label, message, repeat);
+      return line;
+    },
+    appendLog(page, message, level = 'info', event = {}) {
       const targetPage = this.logAliases[page] || page;
       const normalizedLevel = level === 'warning' ? 'warn' : level;
       const text = this.conciseTaskMessage(message, targetPage);
       if (!text) return;
-      this.setTaskStatus(targetPage, text, normalizedLevel);
+      if (this.shouldUpdateTaskStatus(text, normalizedLevel, event)) this.setTaskStatus(targetPage, text, normalizedLevel);
       if (this.isLoglessPage(targetPage)) return;
       if (!this.logs[targetPage]) this.logs[targetPage] = [];
-      const item = { message: text, level: normalizedLevel, time: new Date().toLocaleTimeString() };
+      const item = {
+        message: text,
+        level: normalizedLevel,
+        label: this.logItemLabel(normalizedLevel, event),
+        time: this.logItemTime(event),
+        count: 1,
+      };
       const last = this.logs[targetPage].slice(-1)[0];
-      if (last && last.message === item.message && last.level === item.level) return;
-      this.logs[targetPage].push(item);
       const box = document.getElementById(`${targetPage}Log`);
+      if (last && last.message === item.message && last.level === item.level && last.label === item.label) {
+        last.count = Number(last.count || 1) + 1;
+        const repeat = box?.lastElementChild?.querySelector('.log-repeat');
+        if (repeat) repeat.textContent = `×${last.count}`;
+        return;
+      }
+      this.logs[targetPage].push(item);
       if (!box) return;
-      const line = document.createElement('div');
-      line.className = `log-line ${normalizedLevel}`;
-      line.textContent = text;
-      box.appendChild(line);
+      box.appendChild(this.createLogLine(item));
       box.scrollTop = box.scrollHeight;
     },
     restoreLog(page) {
       const box = document.getElementById(`${page}Log`);
-      const status = this.taskStatus[page];
-      const statusNode = document.getElementById(`${page}Status`);
-      if (statusNode) {
-        statusNode.textContent = status?.message || '等待执行';
-        const cssLevel = status?.level === 'warning' ? 'warn' : (status?.level || 'info');
-        statusNode.className = `terminal-status ${cssLevel}`;
-      }
       const progress = this.progressState[page];
       if (progress) this.setProgress(page, progress.current, progress.total);
       this.renderTaskMetrics(page);
@@ -177,10 +235,7 @@
         return;
       }
       (this.logs[page] || []).forEach((item) => {
-        const line = document.createElement('div');
-        line.className = `log-line ${item.level}`;
-        line.textContent = item.message;
-        box.appendChild(line);
+        box.appendChild(this.createLogLine(Object.assign({ label: '信息', time: '', count: 1 }, item)));
       });
       if (!box.innerHTML && this.activeResultModes?.[page] === 'chapter_text') box.innerHTML = '';
       box.scrollTop = box.scrollHeight;
@@ -242,7 +297,6 @@
       const finalMessage = ok ? message : `${message}（详情见对应 tasklogs 目录）`;
       if (this.taskStore) this.taskStore.finish(targetPage, ok, finalMessage);
       this.setTaskStatus(targetPage, finalMessage, ok ? 'success' : 'error');
-      this.resultTexts[targetPage] = finalMessage;
       this.setTaskSummary(targetPage, finalMessage, ok ? 'success' : 'error');
 
       const resultDisplayMode = result && result.resultDisplayMode ? String(result.resultDisplayMode) : '';
@@ -254,12 +308,13 @@
         return;
       }
 
-      this.resultTexts[targetPage] = '';
       const box = document.getElementById(`${targetPage}Log`);
-      if (box) {
-        box.classList.remove('result-text');
-        box.innerHTML = '';
-      }
+      if (box) box.classList.remove('result-text');
+      this.appendLog(targetPage, finalMessage, ok ? 'success' : 'error', {
+        label: ok ? '完成' : '错误',
+        eventType: ok ? 'completed' : 'error',
+        timestamp: new Date().toISOString(),
+      });
     },
     toast(message, level = 'info', page = this.currentPage) {
       const text = String(message || '').trim();
@@ -272,12 +327,6 @@
 
 (function () {
   window.NovelFanqieAccountMethods = {
-    renderFanqieLoginStateRow(prefix, cfg = {}) {
-      return `<div class="field fanqie-login-state-row">
-        <label>登录状态</label>
-        ${this.filePicker(`${prefix}AuthStatePath`, cfg.authStatePath || '', `${prefix}ChooseAuthState`, '默认 state.json')}
-      </div>`;
-    },
     bindFanqiePickerMenu(button, picker, options, onSelect) {
       if (!button || !picker || picker.dataset.fanqiePickerBound === '1') return;
       picker.dataset.fanqiePickerBound = '1';
@@ -349,59 +398,24 @@
         this._fanqiePickerDocumentHandlersBound = true;
       }
     },
-    bindFanqieLoginStateControls(prefix, configPath) {
-      const inputId = `${prefix}AuthStatePath`;
-      const button = document.getElementById(`${prefix}ChooseAuthState`);
-      const picker = button?.closest('.file-picker');
-      if (!button || !picker) return;
-
-      this.bindFanqiePickerMenu(button, picker, [
-        {
-          value: 'file',
-          title: '选择 state.json',
-        },
-        {
-          value: 'folder',
-          title: '选择状态目录',
-        },
-        {
-          value: 'default',
-          title: '使用默认 state.json',
-        },
-      ], async (kind) => {
-        let path = '';
-        if (kind === 'file') {
-          path = await this.api.choose_file(configPath, false, 'state.json');
-          if (!path) return;
-        } else if (kind === 'folder') {
-          path = await this.api.choose_folder(configPath);
-          if (!path) return;
-        } else if (kind !== 'default') {
-          return;
-        }
-
-        this.setConfigValue(configPath, path);
-        this.updateFilePicker(inputId, path, '默认 state.json');
-        await this.persistPageConfig(this.currentPage);
-      });
-    },
   };
 })();
 (function () {
   window.NovelFanqieTaskMethods = {
     bindAutoPublishPage() {
       this.bindChooseSource('apChooseNovel', 'auto_publish.novelFile', 'apNovelFile', '选择小说来源');
+      this.bindMaskedUrl('apUrl');
       document.querySelectorAll('[data-auto-op]').forEach((button) => button.addEventListener('click', () => this.runAutoPublish(button.dataset.autoOp)));
       document.getElementById('apStop')?.addEventListener('click', () => this.stopTask('auto_publish_stop', 'auto_publish'));
       document.getElementById('apPause')?.addEventListener('click', () => this.stopTask('auto_publish_pause', 'auto_publish'));
       document.getElementById('apResume')?.addEventListener('click', () => this.stopTask('auto_publish_resume', 'auto_publish'));
-      this.bindFanqieLoginStateControls('ap', 'auto_publish.authStatePath');
       this.bindManualScheduleToggle('ap');
     },
     async runAutoPublish(operation) {
       const payload = this.collectPublishPayload('ap', operation);
       this.state.config.auto_publish = payload;
       await this.saveConfig();
+      if (!await this.requireFanqieLogin()) return;
       this.beginTaskUi('auto_publish', '准备启动番茄发布...');
       const ok = await this.api.auto_publish_run(payload);
       if (!ok) this.toast('任务没有启动，请查看日志。', 'warning', 'auto_publish');
@@ -409,6 +423,7 @@
 
     bindChapterSyncPage() {
       this.bindChooseSource('syChooseNovel', 'chapter_sync.novelFile', 'syNovelFile', '选择小说来源');
+      this.bindMaskedUrl('syUrl');
       document.querySelectorAll('[data-sync-op]').forEach((button) => button.addEventListener('click', () => this.runChapterSync(button.dataset.syncOp)));
       document.getElementById('syStop')?.addEventListener('click', () => this.stopTask('chapter_sync_stop', 'chapter_sync'));
       document.getElementById('syPause')?.addEventListener('click', () => this.stopTask('chapter_sync_pause', 'chapter_sync'));
@@ -416,13 +431,13 @@
       document.getElementById('syPullStop')?.addEventListener('click', () => this.stopTask('chapter_sync_stop', 'chapter_sync'));
       document.getElementById('syPullPause')?.addEventListener('click', () => this.stopTask('chapter_sync_pause', 'chapter_sync'));
       document.getElementById('syPullResume')?.addEventListener('click', () => this.stopTask('chapter_sync_resume', 'chapter_sync'));
-      this.bindFanqieLoginStateControls('sy', 'chapter_sync.authStatePath');
       this.bindManualScheduleToggle('sy');
     },
     async runChapterSync(operation) {
       const payload = this.collectPublishPayload('sy', operation);
       this.state.config.chapter_sync = payload;
       await this.saveConfig();
+      if (!await this.requireFanqieLogin()) return;
       this.beginTaskUi('chapter_sync', '准备启动番茄同步...');
       const ok = await this.api.chapter_sync_run(payload);
       if (!ok) this.toast('任务没有启动，请查看日志。', 'warning', 'chapter_sync');
@@ -433,6 +448,31 @@
       const sync = () => fields?.classList.toggle('hidden', !checkbox?.checked);
       checkbox?.addEventListener('change', sync);
       sync();
+    },
+    async requireFanqieLogin() {
+      const loggedIn = !!(this.api.check_login_state && await this.api.check_login_state());
+      if (loggedIn) return true;
+      document.getElementById('loginModal')?.classList.add('open');
+      this.setHeaderStatus('请先登录番茄账号', 'error');
+      return false;
+    },
+    bindMaskedUrl(inputId) {
+      const input = document.getElementById(inputId);
+      if (!input) return;
+      const mask = '••••••••••••';
+      input.dataset.actualValue = input.value || '';
+      const conceal = () => {
+        if (input.dataset.actualValue) input.value = mask;
+      };
+      input.addEventListener('focus', () => {
+        input.value = input.dataset.actualValue || '';
+        input.select();
+      });
+      input.addEventListener('input', () => {
+        input.dataset.actualValue = input.value;
+      });
+      input.addEventListener('blur', conceal);
+      conceal();
     },
     bindChooseSource(buttonId, configPath, inputId, emptyText, afterChoose) {
       const button = document.getElementById(buttonId);
@@ -465,8 +505,8 @@
     collectPublishPayload(prefix, operation) {
       return {
         novelFile: document.getElementById(`${prefix}NovelFile`)?.value || '',
-        chapterManageUrl: document.getElementById(`${prefix}Url`)?.value || '',
-        authStatePath: document.getElementById(`${prefix}AuthStatePath`)?.value || '',
+        chapterManageUrl: document.getElementById(`${prefix}Url`)?.dataset.actualValue || document.getElementById(`${prefix}Url`)?.value || '',
+        authStatePath: '',
         start: Number(document.getElementById(`${prefix}Start`)?.value || 1),
         end: Number(document.getElementById(`${prefix}End`)?.value || 1),
         useAi: !!document.getElementById(`${prefix}UseAi`)?.checked,

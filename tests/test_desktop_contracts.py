@@ -26,7 +26,7 @@ def test_login_waits_for_success_without_default_thirty_second_event(monkeypatch
     navigated: list[str] = []
     monkeypatch.setattr(interactions, "page_text", lambda current: "登录" if "passport" in current.url else "作品 章节")
     monkeypatch.setattr(interactions, "goto_chapter_manage", lambda current, url: navigated.append(url))
-    interactions.ensure_logged_in(page, "https://fanqienovel.com/manage", timeout_ms=5000)
+    interactions.ensure_logged_in(page, "https://fanqienovel.com/manage", timeout_ms=5000, wait_for_login=True)
     assert navigated == ["https://fanqienovel.com/manage"]
 
 

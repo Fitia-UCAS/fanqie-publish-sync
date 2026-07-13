@@ -19,8 +19,8 @@
     activeResultModes: {},
     resultTexts: {},
     saveTimer: null,
-    statusOnlyPages: ['auto_publish', 'chapter_sync'],
-    loglessPages: ['auto_publish', 'chapter_sync'],
+    statusOnlyPages: [],
+    loglessPages: [],
 
     isStatusOnlyPage(page) { const targetPage = this.logAliases[page] || page; return this.statusOnlyPages.includes(targetPage); },
     isLoglessPage(page) { const targetPage = this.logAliases[page] || page; return this.loglessPages.includes(targetPage); },
@@ -75,6 +75,7 @@
       this.currentPage = pageTitles[this.state.config.activePage] ? this.state.config.activePage : defaultPage;
       this.bindShell();
       this.render();
+      await this.refreshLoginState();
     },
     waitForApi() {
       return new Promise((resolve) => {
@@ -107,17 +108,7 @@
         pageMenu?.classList.remove('open');
         brandButton?.setAttribute('aria-expanded', 'false');
       });
-      document.getElementById('loginButton')?.addEventListener('click', async () => {
-        if (!this.api.reset_login) return;
-        this.setHeaderStatus('正在重置授权...', 'busy');
-        try {
-          const result = await this.api.reset_login();
-          this.setHeaderStatus(result && result.ok ? '授权已清除' : '授权清理失败', result && result.ok ? 'ready' : 'error');
-        } catch (error) {
-          console.debug('reset login failed', error);
-          this.setHeaderStatus('授权清理失败', 'error');
-        }
-      });
+      this.bindLoginControls();
       document.getElementById('resetDataButton')?.addEventListener('click', async () => {
         if (!this.api.reset_app_data) return;
         this.setHeaderStatus('正在重置数据...', 'busy');
@@ -170,6 +161,63 @@
         localStorage.setItem('theme', theme);
       }));
       document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'blue');
+    },
+    bindLoginControls() {
+      const modal = document.getElementById('loginModal');
+      const close = () => modal?.classList.remove('open');
+      document.getElementById('loginButton')?.addEventListener('click', async () => {
+        modal?.classList.add('open');
+        await this.refreshLoginState();
+      });
+      document.getElementById('loginClose')?.addEventListener('click', close);
+      modal?.addEventListener('click', (event) => {
+        if (event.target === modal) close();
+      });
+      document.getElementById('loginStart')?.addEventListener('click', async () => {
+        close();
+        this.setHeaderStatus('正在打开登录页面', 'busy');
+        try {
+          const result = await this.api.do_login();
+          await this.refreshLoginState();
+          this.setHeaderStatus(
+            result && result.ok ? '账号已登录' : (result && result.message ? result.message : '登录未完成'),
+            result && result.ok ? 'ready' : 'error',
+          );
+        } catch (error) {
+          this.setHeaderStatus(`登录页面打开失败：${error && error.message ? error.message : error}`, 'error');
+        }
+      });
+      document.getElementById('loginImport')?.addEventListener('click', async () => {
+        this.setLoginControlsBusy(true, '正在导入登录状态');
+        const result = await this.api.import_login_state();
+        this.setLoginControlsBusy(false);
+        await this.refreshLoginState();
+        if (result && result.message) this.setHeaderStatus(result.message, result.ok ? 'ready' : 'error');
+      });
+      document.getElementById('loginReset')?.addEventListener('click', async () => {
+        this.setLoginControlsBusy(true, '正在清除登录状态');
+        const result = await this.api.reset_login();
+        this.setLoginControlsBusy(false);
+        await this.refreshLoginState();
+        this.setHeaderStatus(result && result.ok ? '登录状态已清除' : '清除失败', result && result.ok ? 'ready' : 'error');
+      });
+    },
+    setLoginControlsBusy(busy, message = '') {
+      ['loginStart', 'loginImport', 'loginReset'].forEach((id) => {
+        const button = document.getElementById(id);
+        if (button) button.disabled = !!busy;
+      });
+      if (message) {
+        const text = document.getElementById('loginStateText');
+        if (text) text.textContent = message;
+      }
+    },
+    async refreshLoginState() {
+      if (!this.api || !this.api.check_login_state) return false;
+      const loggedIn = await this.api.check_login_state();
+      const button = document.getElementById('loginButton');
+      if (button) button.textContent = loggedIn ? '账号已登录' : '账号登录';
+      return !!loggedIn;
     },
     async saveConfig() {
       this.state.config.activePage = this.currentPage;

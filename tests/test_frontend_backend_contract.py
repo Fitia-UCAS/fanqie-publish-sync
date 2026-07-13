@@ -11,6 +11,7 @@ def test_desktop_api_keeps_frontend_contract() -> None:
         "choose_folder",
         "choose_source",
         "choose_login_state",
+        "import_login_state",
         "open_path",
         "open_log",
         "open_backup",

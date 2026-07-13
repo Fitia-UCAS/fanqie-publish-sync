@@ -31,7 +31,7 @@
         <div class="header-actions no-drag">
           <button class="header-btn" id="themeButton" type="button">外观偏好</button>
           <button class="header-btn" id="resetDataButton" type="button">重置数据</button>
-          <button class="header-btn" id="loginButton" type="button">重置授权</button>
+          <button class="header-btn" id="loginButton" type="button">账号登录</button>
           <div class="status-badge" id="statusBadge"><i></i> 就绪</div>
         </div>
       </header>
@@ -52,6 +52,20 @@
           <button data-theme="amber"><i class="amber"></i><span>事务金</span></button>
           <button data-theme="rose"><i class="rose"></i><span>玫瑰粉</span></button>
           <button data-theme="violet"><i class="violet"></i><span>深空紫</span></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="theme-modal" id="loginModal" aria-hidden="true">
+      <div class="theme-box login-box">
+        <div class="theme-head">
+          <b>番茄账号登录</b>
+          <button id="loginClose" type="button">×</button>
+        </div>
+        <div class="login-actions">
+          <button class="primary-btn" id="loginStart" type="button">打开登录页面</button>
+          <button class="soft-btn" id="loginImport" type="button">导入登录状态</button>
+          <button class="soft-btn" id="loginReset" type="button">清除登录状态</button>
         </div>
       </div>
     </div>

@@ -52,9 +52,12 @@ def ensure_logged_in(
     chapter_manage_url: str,
     log: Callable[[str], None] = print,
     timeout_ms: int = 900000,
+    wait_for_login: bool = False,
 ) -> None:
     if not _is_login_page(page):
         return
+    if not wait_for_login:
+        raise RuntimeError("尚未登录或登录状态已过期，请先通过账号登录入口完成登录。")
     log("检测到未登录，请在浏览器中完成番茄账号登录。程序会在登录成功后自动继续。")
     deadline = time.monotonic() + max(timeout_ms, 1000) / 1000
     last_notice = 0.0

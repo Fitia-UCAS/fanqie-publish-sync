@@ -66,6 +66,7 @@ def make_context(*, debug_category: str = "chapter_sync", debug_enabled: bool | 
     p = sync_playwright().start()
     BROWSER_DATA_DIR.mkdir(parents=True, exist_ok=True)
     launch_kwargs: dict[str, Any] = {
+        "headless": False,
         "args": [
             "--disable-blink-features=AutomationControlled",
             "--start-maximized",

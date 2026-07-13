@@ -17,11 +17,20 @@ _OPERATION_LABELS = {
     "pull": "从平台拉取",
 }
 
+_TASK_LABELS = {
+    "auto_publish": "番茄发布",
+    "chapter_sync": "番茄同步",
+}
+
 
 class FanqieTaskLog:
     def __init__(self, *, callbacks: TaskCallbacks, task_kind: str, operation: str, start: int, end: int, total: int) -> None:
         self.callbacks = callbacks
         self.total = total
+        self.task_kind = task_kind
+        self.operation = operation
+        self.start = start
+        self.end = end
         self.current_chapter = 0
         self.current_index = 0
         self._index_announced = False
@@ -36,6 +45,10 @@ class FanqieTaskLog:
 
     def emit_start(self, operation: str, start: int, end: int) -> None:
         label = _OPERATION_LABELS.get(operation, operation)
+        self.callbacks.emit_log(f"任务：{_TASK_LABELS.get(self.task_kind, self.task_kind)}")
+        self.callbacks.emit_log(f"操作：{label}")
+        self.callbacks.emit_log(f"范围：第 {start} 章到第 {end} 章")
+        self.callbacks.emit_log(f"开始：{datetime.now():%Y-%m-%d %H:%M:%S}")
         self.callbacks.emit_log(f"准备执行：{label}｜第 {start} 章到第 {end} 章")
         self.callbacks.emit_progress(0, max(1, self.total))
 
@@ -45,16 +58,27 @@ class FanqieTaskLog:
             return
         self._write_detail(text)
         summary = self._to_console_summary(text)
-        if summary:
-            level, summary_text = summary
-            if summary_text == self._last_console_message:
-                return
-            self._last_console_message = summary_text
-            self.callbacks.emit_log(summary_text, level)
+        level = summary[0] if summary else self._level_for_message(text)
+        if text == self._last_console_message:
+            return
+        self._last_console_message = text
+        self.callbacks.emit_log(text, level)
 
     def finish(self, ok_count: int, processed_count: int) -> None:
-        self._write_detail(f"任务结束：成功 {ok_count}/{self.total}。")
+        message = f"任务结束：成功 {ok_count}/{self.total}。"
+        self._write_detail(message)
+        self.callbacks.emit_log(message, "success" if ok_count == self.total else "error")
         self.callbacks.emit_progress(min(processed_count, self.total), max(1, self.total))
+
+    @staticmethod
+    def _level_for_message(message: str) -> str:
+        if message.startswith("失败：") or "写入失败" in message:
+            return "error"
+        if "未登录" in message or "重试" in message or "降级" in message:
+            return "warning"
+        if message.startswith("完成：") or message.endswith("通过。") or message.endswith("完成。"):
+            return "success"
+        return "info"
 
     def _write_detail(self, message: str) -> None:
         with self.path.open("a", encoding="utf-8") as file:
@@ -200,4 +224,3 @@ class FanqieTaskLog:
         if task_kind == "auto_publish":
             return task_log_file("auto_publish")
         return task_log_file("chapter_sync")
-
